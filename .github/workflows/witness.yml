@@ -1,0 +1,46 @@
+# The two witnesses run here in public, on different machines. Anyone can read what they ran.
+name: witness
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: witness
+
+jobs:
+  w1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      # Old file bodies, so a change record can include the changed region.
+      - uses: actions/cache@v4
+        with:
+          path: .witness-cache
+          key: w1-${{ github.run_id }}
+          restore-keys: w1-
+      - run: node witness/src/run.ts --key W1_KEY
+        env:
+          W1_KEY: ${{ secrets.W1_KEY }}
+  w2:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: .witness-cache
+          key: w2-${{ github.run_id }}
+          restore-keys: w2-
+      - run: node witness/src/run.ts --key W2_KEY
+        env:
+          W2_KEY: ${{ secrets.W2_KEY }}
