@@ -1,5 +1,0 @@
-{ "manifest_version": 3, "name": "Pretend wallet", "version": "0.0.1",
-  "content_scripts": [
-    { "matches": ["<all_urls>"], "js": ["iso.js"], "run_at": "document_start", "all_frames": false },
-    { "matches": ["<all_urls>"], "js": ["inpage-main.js"], "world": "MAIN", "run_at": "document_start" } ],
-  "web_accessible_resources": [{ "resources": ["inpage-war.js"], "matches": ["<all_urls>"] }] }

@@ -15,4 +15,3 @@ The product. Second Witness exists so a signer doesn't have to trust one party's
 - **File bodies:** witnesses cache them locally. Only hashes, and up to 16 KiB of changed region, go on chain. A 3 MB Safe bundle has no business in a database, and the hash is all the comparison needs.
 - **The roster:** it's on ENS, so admitting and revoking a witness has one public owner and a name people can read.
 - **The site list:** it's bundled with the extension, so an attacker can't add a site by writing a record.
-- **The Bybit captures:** third-party bytes, so only hashes and the changed region are in the repo.

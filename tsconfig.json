@@ -15,5 +15,5 @@
     "skipLibCheck": true
   },
   "include": ["core", "witness", "extension", "feed", "demo-site", "replay", "reader"],
-  "exclude": ["**/dist", "**/node_modules", "spikes"]
+  "exclude": ["**/dist", "**/node_modules"]
 }

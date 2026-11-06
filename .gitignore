@@ -1,14 +1,12 @@
 node_modules/
 dist/
+public/
 .env
 .env.*
 !.env.example
 .witness-cache/
-.playwright/
-playwright-report/
-test-results/
+.vercel/
 *.log
 .DS_Store
-# Archived Safe bundle captures are third-party bytes: commit hashes and regions only.
+# Third-party bytes: only hashes and regions are committed.
 replay/captures/
-.vercel/

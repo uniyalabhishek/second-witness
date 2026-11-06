@@ -1,10 +1,10 @@
 // Shared config for the ENSv2 scripts. Addresses come from the "Sepolia (ENSv2)" table at
-// https://docs.ens.domains/learn/deployments and are checked on chain by check.mjs.
+// https://docs.ens.domains/learn/deployments.
 // Do not copy addresses or ABIs from contracts-v2 HEAD: that is a different deployment.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import {
   createPublicClient, createWalletClient, http, parseAbi, toHex, keccak256, stringToHex,
-  encodeAbiParameters, encodeFunctionData, formatUnits, formatEther,
+  encodeAbiParameters, encodeFunctionData, formatUnits,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { sepolia } from 'viem/chains'
@@ -15,35 +15,21 @@ export const RPC = process.env.SEPOLIA_RPC ?? 'https://ethereum-sepolia-rpc.publ
 export const NAME = 'secondwitness.eth'
 export const LABEL = 'secondwitness'
 export const OWNER = '0x73F73764221642767346706e8A82Cdd823eC9e24'
-export const CI = '0x05883068E04ccC18039A81D96AD899D7eaA6E6a2'
-export const WITNESSES = {
-  w1: '0x109F654eC9c3c235d2f49128f8FA373Bb3685821',
-  w2: '0xEC6E879764725c30eca0DF033adAcDB58A05f632',
-}
 export const ROSTER = ['w1', 'w2', 'w3', 'w4', 'w5']
-export const RELEASE_KEY = 'release'
 
 export const ETH_REGISTRAR = '0xf633e7fc17e2bbe0d0965d18ec1821dcb754a3d3'
 export const ETH_REGISTRY = '0xd4ebcbbdf463c9c45784603db0ddd499bc44a8b4'
 export const RESOLVER_IMPL = '0x115eb53f0c60696633855f90b138178fb40b2b2c'
 export const FACTORY = '0xda70306c98e97ece36f997a21368e53298572991'
-export const ORACLE = '0x8196665d4ca7488b6474a9ec8e7d2719fb42263a'
-export const UNIVERSAL_RESOLVER = '0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe'
 export const USDC = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' // Circle's Sepolia USDC, needs the faucet
 // The docs' MockUSDC for this deployment. The oracle accepts it and anyone can mint it. Other "MockUSDC"
 // addresses (0x16f95d..., 0xd332..., 0xba11...) are rejected.
 export const MOCK_USDC = '0x240b0316df57887dbbe58b586508b19e633a14aa'
 
-export const MIN_DURATION = 2419200n // 28 days, the registrar's MIN_REGISTER_DURATION
 // One year, so the roster outlives judging. Override with ENS_DURATION_DAYS (minimum 28).
 export const DURATION = BigInt(process.env.ENS_DURATION_DAYS ?? 365) * 86400n
-// Gas from eth_simulateV1 on live Sepolia (ens/simulate.mjs), every write in the sequence. Anvil reports about a
-// third of this because Sepolia's current gas rules price new state far higher, so don't budget from a fork.
-export const GAS_ALL_STEPS = 3_100_000n
-export const ETH_TO_REQUEST = 50_000_000_000_000_000n // 0.05 ETH covers GAS_ALL_STEPS up to about 16 gwei
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export const ZERO_BYTES32 = `0x${'00'.repeat(32)}`
-export const ROLE_SET_TEXT = 1n << 4n
 // Every role and admin nybble, as in the docs' Verifiable Factory example.
 export const ALL_ROLES = 0x1111111111111111111111111111111111111111111111111111111111111111n
 
@@ -56,8 +42,6 @@ export const registrarAbi = parseAbi([
   'function register(string label, address owner, bytes32 secret, address subregistry, address resolver, uint64 duration, address paymentToken, bytes32 referrer) returns (uint256)',
   'function MIN_COMMITMENT_AGE() view returns (uint64)',
   'function MAX_COMMITMENT_AGE() view returns (uint64)',
-  'function MIN_REGISTER_DURATION() view returns (uint64)',
-  'function BENEFICIARY() view returns (address)',
   'error NameNotAvailable(string label)',
   'error UnexpiredCommitmentExists(bytes32 commitment)',
   'error CommitmentTooNew(bytes32 commitment, uint64 validFrom, uint64 blockTimestamp)',
@@ -74,15 +58,6 @@ export const factoryAbi = parseAbi([
 export const resolverAbi = parseAbi([
   'function initialize((address account, uint256 roleBitmap)[] grants, bytes[] calls)',
   'function setAddress(bytes name, uint256 coinType, bytes addressBytes)',
-  'function setText(bytes name, string key, string value)',
-  'function grantSetterRoles(bytes setter, address account) returns (bool)',
-  'function grantRoles(uint256 resource, uint256 roleBitmap, address account) returns (bool)',
-  'function grantRootRoles(uint256 roleBitmap, address account) returns (bool)',
-  'function revokeRoles(uint256 resource, uint256 roleBitmap, address account) returns (bool)',
-  'function hasRoles(uint256 resource, uint256 roleBitmap, address account) view returns (bool)',
-  'function hasRootRoles(uint256 roleBitmap, address account) view returns (bool)',
-  'function roles(uint256 resource, address account) view returns (uint256)',
-  'function getRecordId(bytes32 node) view returns (uint256)',
   'error EACUnauthorizedAccountRoles(uint256 resource, uint256 roleBitmap, address account)',
   'error EACCannotGrantRoles(uint256 resource, uint256 roleBitmap, address account)',
   'error EACRootResourceNotAllowed()',
@@ -120,11 +95,6 @@ export const client = createPublicClient({ chain: sepolia, transport: http(RPC) 
 
 // Never log the key or the account object's internals. Only the address leaves this function.
 export function walletFromEnv(envName, expected) {
-  // dry-run.mjs only: a local fork with an impersonated account, so nothing is signed.
-  if (process.env.ENS_FORK_IMPERSONATE === '1') {
-    if (!/^http:\/\/127\.0\.0\.1[:/]/.test(RPC)) throw new Error('ENS_FORK_IMPERSONATE is for a local fork only')
-    return createWalletClient({ account: expected, chain: sepolia, transport: http(RPC) })
-  }
   const key = process.env[envName]
   if (!key) throw new Error(`${envName} is not set. Run with: node --env-file=.env ens/<script>.mjs`)
   const account = privateKeyToAccount(key.startsWith('0x') ? key : `0x${key}`)
@@ -156,4 +126,3 @@ export async function send(wallet, request) {
 }
 
 export const usd = (v) => `${formatUnits(v, 6)} USDC`
-export const eth = (v) => `${formatEther(v)} ETH`

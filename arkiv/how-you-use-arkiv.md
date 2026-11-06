@@ -19,4 +19,4 @@
 
 ## Real numbers
 
-From the current baseline on Rabdi, 7 Nov 2026: 8 observations and 2 statuses, holding 571 file and hash pairs across 4 sites. A full baseline for both witnesses took 8 creates. A run with nothing new writes one status patch. Both witnesses have spent about 0.05 test tokens across about 100 transactions, spikes included.
+From the current baseline on Rabdi, 7 Nov 2026: 8 observations and 2 statuses, holding 571 file and hash pairs across 4 sites. A full baseline for both witnesses took 8 creates. A run with nothing new writes one status patch. Both witnesses have spent about 0.05 test tokens across about 100 transactions, including early tests.

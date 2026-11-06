@@ -189,7 +189,7 @@ test('classify: an unparseable URL can never become a file', () => {
 const versionsOf = (...hashes: string[]) => new Map(hashes.map((h, i) => [h, { witnesses: 2, firstSeenBlock: i + 1 }]));
 const RECENT_FROM = 1;
 
-test('compareFile follows the PRD table', () => {
+test('compareFile covers every path and hash case', () => {
   const imm = new RegExp(site.immutable);
   assert.equal(compareFile(PINNED, hA, versionsOf(hA), imm, RECENT_FROM), 'matches');
   assert.equal(compareFile(PINNED, hB, versionsOf(hA), imm, RECENT_FROM), 'changed');
@@ -329,7 +329,7 @@ test('Partial: eval, wasm, listed third party and cross-origin frames each count
   assert.deepEqual(v.uncompared, { inline: 0, eval: 1, wasm: 1, thirdParty: [{ host: 'cdn.listed.example', scripts: 2 }], frames: 2 });
 });
 
-test('Partial: a witness status over one hour old (PRD done-when 8)', () => {
+test('Partial: a witness status over one hour old', () => {
   const v = run([file(PINNED, hA)], catalogue({ statuses: [statusFresh(W1), { witness: W2, updatedAtBlock: HEAD - 1801, ok: [site.id] }] }));
   assert.equal(v.result, 'partial');
   assert.equal(v.freshWitnesses, 1);

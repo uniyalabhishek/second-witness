@@ -7,16 +7,6 @@
   "engines": {
     "node": ">=22.18"
   },
-  "workspaces": [
-    "core",
-    "reader",
-    "witness",
-    "extension",
-    "feed",
-    "demo-site",
-    "replay",
-    "ens"
-  ],
   "scripts": {
     "test": "node --test \"core/test/*.test.ts\" \"reader/test/*.test.ts\" \"witness/test/*.test.ts\" \"feed/test/*.test.ts\" \"extension/test/*.test.ts\" \"replay/test/*.test.ts\" \"demo-site/test/*.test.ts\"",
     "typecheck": "tsc --noEmit",

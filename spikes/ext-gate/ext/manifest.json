@@ -1,4 +1,0 @@
-{ "manifest_version": 3, "name": "Second Witness gate spike", "version": "0.0.1",
-  "permissions": ["debugger", "activeTab", "storage"],
-  "background": { "service_worker": "sw.js" },
-  "action": { "default_popup": "popup.html" } }

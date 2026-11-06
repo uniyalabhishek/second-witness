@@ -1,4 +1,4 @@
-// Pure: PopupState in, HTML out. Exact copy lives in design/DESIGN.md.
+// Pure: PopupState in, HTML out.
 import { MIN_WITNESSES } from '../../core/src/types.ts';
 import type { ChangedFile, Verdict } from '../../core/src/types.ts';
 import type { PopupState } from './state.ts';
