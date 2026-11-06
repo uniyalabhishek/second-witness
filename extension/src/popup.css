@@ -1,0 +1,19 @@
+@import "../../design/tokens.css";
+@import "../../design/base.css";
+
+.popup { width: 360px; max-height: 560px; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg); }
+.popup-host { padding: var(--space-2) var(--space-3); color: var(--ink-2); overflow-wrap: anywhere; }
+.popup .result:not([data-result="changed"]) { padding-top: 0; }
+.popup-idle { display: grid; gap: var(--space-3); padding: var(--space-2) var(--space-3) var(--space-3); }
+.popup-primary { width: 100%; }
+.popup-checking { display: grid; gap: var(--space-1); padding: var(--space-4) var(--space-3); }
+.popup-count { font-size: var(--text-l); font-weight: var(--weight-strong); line-height: var(--leading-tight); }
+.popup-rows { padding: 0 var(--space-3); }
+.popup-rows--gap { margin-top: var(--space-2); }
+.popup-list { padding: var(--space-2) var(--space-3) 0; }
+.popup-list--first .list > li { font-weight: var(--weight-strong); }
+.popup-list--first .value { font-weight: var(--weight-strong); }
+.popup-region { margin: var(--space-1) var(--space-3) 0; max-height: 96px; overflow-y: auto; flex: none; }
+.popup-note { padding: var(--space-2) var(--space-3); }
+.popup-foot { position: sticky; bottom: 0; margin-top: var(--space-3); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-top: var(--rule-width) solid var(--rule); background: var(--bg); }
+.popup-last { padding: 0 var(--space-3) var(--space-3); }
