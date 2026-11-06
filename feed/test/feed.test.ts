@@ -66,8 +66,8 @@ test('a site reads as its host, not its internal id', () => {
   c.observations.push({ ...c.observations[0]!, site: 'demo-2' });
   c.changes.push({ ...c.changes[0]!, site: 'demo-2' });
   const h = feed(c);
-  assert.match(h, /<tr><td class="mono"[^>]*>localhost:8787<\/td>/);
-  assert.match(h, /<span class="mono">localhost:8787<\/span>/);
+  assert.match(h, /<tr><td class="mono"[^>]*>second-witness.vercel.app<\/td>/);
+  assert.match(h, /<span class="mono">second-witness.vercel.app<\/span>/);
   assert.doesNotMatch(h, /demo-2/);
 });
 

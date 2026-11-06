@@ -1,7 +1,7 @@
 import type { Site } from './types.ts';
 
 /** Where the Demo Treasury is served. The one value to change when it's deployed. */
-export const DEMO_ORIGIN = 'http://localhost:8787';
+export const DEMO_ORIGIN = 'https://second-witness.vercel.app';
 
 /** The short list. Bundled with the witness and the extension. */
 export const SITES: Site[] = [

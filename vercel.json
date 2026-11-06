@@ -3,7 +3,22 @@
   "installCommand": "",
   "buildCommand": "",
   "outputDirectory": "public",
-  "functions": { "api/index.mjs": { "includeFiles": "design/*.css" } },
-  "redirects": [{ "source": "/feed", "destination": "/feed/", "permanent": false }],
-  "rewrites": [{ "source": "/:path*", "destination": "/api/index?__path=:path*" }]
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "design/*.css"
+    }
+  },
+  "redirects": [
+    {
+      "source": "/feed",
+      "destination": "/feed/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ]
 }

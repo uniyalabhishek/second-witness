@@ -1,0 +1,11 @@
+# Allow-list, because Vercel's CLI does not read .gitignore and would upload .env.
+*
+!public
+!public/**
+!api
+!api/**
+!demo-site
+!demo-site/**
+!design
+!design/**
+!vercel.json

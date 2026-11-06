@@ -1,6 +1,6 @@
 // Drives the built extension in a real browser against the real sites and real records. Raw CDP, and only on
 // the extension's own page: attaching to a checked tab, or evaluating in it, would show up as code in that tab.
-// Needs: npm run build, the demo site on :8787, and witnesses already run.
+// Needs: npm run build, the demo site at DEMO_ORIGIN, and witnesses already run.
 // node extension/test/e2e.mjs [safe cow revoke demo loading debugger privacy extensions release ens]
 // `release` and `ens` spend testnet gas and must be named. After `release`, the demo site id reads New release for
 // 72 hours, so bump it in core/src/sites.ts, rebuild and rerun the witnesses.
@@ -9,11 +9,12 @@ import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writ
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { DEMO_ORIGIN } from '../../core/src/sites.ts';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
 const SHOTS = process.env.E2E_SHOTS ?? join(tmpdir(), 'second-witness-e2e');
-const DEMO = 'http://localhost:8787';
+const DEMO = DEMO_ORIGIN;
 const CONTROL_KEY = process.env.CONTROL_KEY ?? 'local-demo';
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const steps = process.argv.slice(2).length ? process.argv.slice(2) : ['safe', 'cow', 'revoke', 'demo', 'loading', 'debugger', 'privacy', 'extensions'];
