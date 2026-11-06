@@ -1,0 +1,75 @@
+/* Second Witness design tokens. Custom properties only.
+   Colour means a result. There is no brand colour and no accent. */
+
+:root {
+  /* Neutrals */
+  --bg: #ffffff;
+  --surface: #f3f4f5;
+  --ink: #16181b;
+  --ink-2: #565a61;
+  --rule: #d8dadd;
+  --rule-strong: #868a91;
+
+  /* Results */
+  --green: #0b6b4f;
+  --amber: #875400;
+  --red: #b4260f;
+  --grey: #565a61;
+  --red-fill: #b4260f;
+  --on-red: #ffffff;
+
+  /* Type: four sizes, two weights */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --text-s: 12px;
+  --text-m: 14px;
+  --text-l: 18px;
+  --text-xl: 28px;
+  --weight-regular: 400;
+  --weight-strong: 600;
+  --leading: 1.45;
+  --leading-tight: 1.15;
+
+  /* Space: five steps */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 48px;
+
+  /* Shape */
+  --radius: 3px;
+  --rule-width: 1px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1c1f;
+    --surface: #25282c;
+    --ink: #eceef0;
+    --ink-2: #a9adb3;
+    --rule: #3a3d42;
+    --rule-strong: #7f838a;
+    --green: #52c79f;
+    --amber: #e3ad4a;
+    --red: #ff8f78;
+    --grey: #a9adb3;
+    --red-fill: #c0301a;
+    --on-red: #ffffff;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1a1c1f;
+  --surface: #25282c;
+  --ink: #eceef0;
+  --ink-2: #a9adb3;
+  --rule: #3a3d42;
+  --rule-strong: #7f838a;
+  --green: #52c79f;
+  --amber: #e3ad4a;
+  --red: #ff8f78;
+  --grey: #a9adb3;
+  --red-fill: #c0301a;
+  --on-red: #ffffff;
+}

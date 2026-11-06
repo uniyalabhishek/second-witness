@@ -1,0 +1,145 @@
+/* Shared element styles and the few classes every surface uses.
+   Load after tokens.css. Vanilla CSS, no build step. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root { color-scheme: light dark; -webkit-text-size-adjust: 100%; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--weight-regular) var(--text-m) / var(--leading) var(--font-sans);
+}
+
+h1, h2, h3, p, ul, ol, dl, dd, pre, figure { margin: 0; padding: 0; }
+h1, h2, h3 { font: inherit; font-weight: var(--weight-strong); }
+ul, ol { list-style: none; }
+a { color: inherit; text-underline-offset: 2px; }
+
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Text helpers */
+.small { font-size: var(--text-s); }
+.quiet { color: var(--ink-2); }
+.mono { font-family: var(--font-mono); font-size: var(--text-s); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Result block: sign, word, one plain sentence */
+[data-result="matches"] { --result: var(--green); }
+[data-result="changed"] { --result: var(--red); }
+[data-result="not-seen"],
+[data-result="new-release"],
+[data-result="partial"] { --result: var(--amber); }
+[data-result="cant-check"] { --result: var(--grey); }
+
+.result { padding: var(--space-3); }
+.result-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-strong);
+  line-height: var(--leading-tight);
+  color: var(--result);
+}
+.result-sign { font-family: var(--font-mono); font-weight: var(--weight-regular); }
+.result-text { margin-top: var(--space-2); }
+
+/* Only Changed is loud. It alone fills. */
+.result[data-result="changed"] { background: var(--red-fill); color: var(--on-red); }
+.result[data-result="changed"] .result-head { color: var(--on-red); }
+
+/* The same pair at text size, for lists and tables */
+.result-inline {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-weight: var(--weight-strong);
+  color: var(--result);
+  white-space: nowrap;
+}
+.result-inline .result-sign { font-size: var(--text-m); }
+
+/* Mono value. Cuts in the middle only when it must. Selecting or copying gives the whole value. */
+.value {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  line-height: var(--leading);
+  text-align: left;
+  vertical-align: bottom;
+  cursor: copy;
+  white-space: nowrap;
+}
+.value-head { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.value-tail { flex: none; }
+/* Hashes always show 8 and 8. The ellipsis is generated, so copying gives the real value. */
+.value--hash .value-head { max-width: 8ch; text-overflow: clip; }
+.value--hash .value-tail::before { content: "\2026"; }
+
+/* Focus or click reveals the whole value in place */
+.value:focus { display: inline; white-space: normal; overflow-wrap: anywhere; }
+.value:focus .value-head { max-width: none; overflow: visible; }
+.value:focus .value-tail::before { content: none; }
+.value[data-copied]::after {
+  content: "  Copied";
+  white-space: pre;
+  font-family: var(--font-sans);
+  color: var(--ink-2);
+}
+
+/* Label and value rows, ruled, no boxes */
+.row {
+  display: grid;
+  grid-template-columns: var(--row-label, 72px) minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: baseline;
+  padding: var(--space-2) 0;
+  border-top: var(--rule-width) solid var(--rule);
+  font-size: var(--text-s);
+}
+.row > :first-child { color: var(--ink-2); }
+.row > :last-child { min-width: 0; }
+
+/* A plain list of values under a small heading */
+.list-title { font-size: var(--text-s); font-weight: var(--weight-strong); }
+.list > li { display: flex; padding: var(--space-1) 0 0; font-size: var(--text-s); min-width: 0; }
+
+/* Changed region. Wraps, never scrolls sideways. */
+.region {
+  padding: var(--space-2);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: var(--text-s);
+  line-height: var(--leading);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.region mark { background: none; color: inherit; font-weight: var(--weight-strong); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Buttons: one filled, one outlined */
+.button {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  border: var(--rule-width) solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--bg);
+  font: var(--weight-strong) var(--text-m) / var(--leading) var(--font-sans);
+  cursor: pointer;
+}
+.button--quiet { background: none; color: var(--ink); border-color: var(--rule-strong); }
+.button:hover { text-decoration: underline; text-underline-offset: 2px; }
