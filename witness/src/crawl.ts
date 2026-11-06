@@ -68,7 +68,7 @@ export async function crawl(site: Site): Promise<CrawlResult> {
   let frontier: string[];
   let fromHome: Set<string>;
   try {
-    const home = await get(`${origin}/`);
+    const home = await get(new URL(site.home ?? '/', origin).href);
     if (!home.ok) return { ok: false, files: [], failed: 0 };
     fromHome = new Set(refsFromHtml(await home.text(), home.url));
     frontier = [...fromHome, ...site.seeds.map(s => new URL(s, origin).href)];

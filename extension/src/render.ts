@@ -157,8 +157,7 @@ function changedFile(c: ChangedFile): string {
     row(bothWitnessed ? 'Other' : 'Witnesses', hashes(others)),
     sizeRow(c),
   ];
-  const noRegion = bothWitnessed ? 'Witnesses kept no changed region for this file.' : 'Witnesses never recorded this version, so there is no changed region to show.';
-  if (region === null) return rows([...items, row('Region', noRegion)]);
+  if (region === null) return rows(items);
   return (
     rows(items) +
     `<div class="popup-list"><h2 class="list-title">Witnessed change, block ${num(c.evidence!.createdAtBlock)}</h2></div>` +
@@ -239,7 +238,7 @@ export function render(state: PopupState, now: number): string {
   }
   const last = state.lastCheck;
   const intro = last
-    ? `Last check: ${inline(last.result)}, ${esc(ago((now - last.finishedAt) / 1000))}. Code loaded since then was not compared.`
+    ? `Last check: ${inline(last.result, 'head')}, ${esc(ago((now - last.finishedAt) / 1000))}. Check again before you sign.`
     : 'Check the code in this tab against what everyone else got.';
   return shell(
     state.host,

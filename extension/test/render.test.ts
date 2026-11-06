@@ -62,7 +62,7 @@ test('idle states', () => {
   assert.match(html('idle'), /Witness records updated 6 minutes ago\./);
   assert.match(html('idle, records unread'), /have not been read yet/);
   const after = html('idle, after Finish');
-  assert.match(text(after), /Last check: =Matches, 4 minutes ago\. Code loaded since then was not compared\./);
+  assert.match(text(after), /Last check: =Same code, 4 minutes ago\. Check again before you sign\./);
   const unlisted = html('idle, unlisted');
   assert.match(unlisted, /Can't check/);
   assert.match(unlisted, /The debugger was not attached\./);
@@ -115,7 +115,7 @@ test('real values appear', () => {
 
   const two = html('changed, two versions, no region');
   assert.match(two, /This file's name promises fixed content, and this tab is running a changed version\./);
-  assert.match(two, /Witnesses kept no changed region for this file\./);
+  assert.doesNotMatch(two, /Region/);
   assert.doesNotMatch(two, /<pre/);
 
   const orig = html('changed, tab holds the original');

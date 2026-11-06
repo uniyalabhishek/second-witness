@@ -2,19 +2,18 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Server } from 'node:http';
 // @ts-expect-error plain JS module
-import { createDemoServer, APP_PATH, RELEASE_PATH, RECIPIENT, OTHER } from '../server.mjs';
+import { createDemoServer, APP_PATH, RECIPIENT, OTHER } from '../server.mjs';
 
 let server: Server;
 let base: string;
 before(async () => {
-  server = createDemoServer({ key: 'k' }).server;
+  server = createDemoServer();
   await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 });
 after(() => server.close());
 
-const post = (path: string, body = '', cookie = '') =>
-  fetch(base + path, { method: 'POST', body, redirect: 'manual', headers: { 'content-type': 'application/x-www-form-urlencoded', cookie } });
+const post = (path: string) => fetch(base + path, { method: 'POST', redirect: 'manual' });
 
 test('without the cookie, the app file is clean and immutable', async () => {
   const r = await fetch(base + APP_PATH);
@@ -33,24 +32,31 @@ test('with the cookie, the same path serves altered code', async () => {
   assert.ok(!t.includes(RECIPIENT));
 });
 
-test('cleaning clears the cookie, and the page keeps one external script so Matches is reachable', async () => {
-  assert.match((await post('/control/clean')).headers.get('set-cookie')!, /Max-Age=0/);
+test('the home page says what this is, links out and runs no script', async () => {
   const html = await (await fetch(base + '/')).text();
+  assert.match(html, /a button you press before you sign/);
+  assert.doesNotMatch(html, /<script/);
+  for (const href of ['/demo', '/extension', 'https://github.com/uniyalabhishek/second-witness']) assert.ok(html.includes(`href="${href}"`), href);
+  assert.doesNotMatch(html, /\.zip/); // Clicking Extension must not start a download.
+});
+
+test('the extension page explains the install and only then offers the zip', async () => {
+  const html = await (await fetch(base + '/extension')).text();
+  for (const step of ['chrome://extensions', 'Developer mode', 'Load unpacked', 'href="/second-witness-extension.zip"', 'href="/demo"']) assert.ok(html.includes(step), step);
+  assert.doesNotMatch(html, /<script/);
+});
+
+test('the demo page has one external script, so Same code is reachable, and its own controls', async () => {
+  const html = await (await fetch(base + '/demo')).text();
   assert.deepEqual([...html.matchAll(/<script[^>]*>/g)].map(m => m[0]), [`<script src="${APP_PATH}">`]);
+  assert.match(html, /A fake payment page\. Altered code changes the recipient\./);
+  for (const action of ['/control/target', '/control/clean', '/control/refetch']) assert.ok(html.includes(`action="${action}"`), action);
 });
 
-test('publishing needs the key, then everyone gets the renamed file, then rollback restores', async () => {
-  assert.equal((await post('/control/release', 'key=wrong')).status, 403);
-  assert.ok((await (await fetch(base + '/')).text()).includes(APP_PATH));
-  assert.equal((await post('/control/release', 'key=k')).status, 303);
-  assert.ok((await (await fetch(base + '/')).text()).includes(RELEASE_PATH));
-  assert.ok((await (await fetch(base + RELEASE_PATH)).text()).includes(OTHER));
-  await post('/control/rollback', 'key=k');
-  assert.ok((await (await fetch(base + '/')).text()).includes(APP_PATH));
-});
-
-test('an oversized form is refused and the server stays up', async () => {
-  const r = await post('/control/release', 'k'.repeat(2048));
-  assert.equal(r.status, 400);
-  assert.equal((await fetch(base + '/')).status, 200);
+test('each control returns to the demo, and cleaning clears the cookie', async () => {
+  const clean = await post('/control/clean');
+  assert.match(clean.headers.get('set-cookie')!, /Max-Age=0/);
+  assert.equal(clean.headers.get('location'), '/demo');
+  assert.equal((await post('/control/target')).headers.get('location'), '/refresh');
+  assert.match(await (await fetch(base + '/refresh')).text(), /location\.replace\('\/demo'\)/);
 });

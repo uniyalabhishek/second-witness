@@ -134,6 +134,19 @@ test('crawl: a home page with no scripts is not ok, even when a seed loads', asy
   assert.equal(r.ok, false);
 });
 
+test('crawl: a site can name the page to start from', async () => {
+  const shop = createServer((req, res) => {
+    if (req.url === '/app') res.writeHead(200, { 'content-type': 'text/html' }).end('<script src="/a.js"></script>');
+    else if (req.url === '/a.js') res.writeHead(200, { 'content-type': 'text/javascript' }).end('1');
+    else res.writeHead(200, { 'content-type': 'text/html' }).end('<p>Welcome.</p>');
+  });
+  await new Promise<void>(r => shop.listen(0, '127.0.0.1', r));
+  const r = await crawl({ ...fixture(), origins: [`http://127.0.0.1:${(shop.address() as { port: number }).port}`], seeds: [], home: '/app' });
+  shop.close();
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.files.map(f => f.path), ['/a.js']);
+});
+
 test('crawl: an unreachable site is not ok and does not throw', async () => {
   const r = await crawl({ ...fixture(), origins: ['http://127.0.0.1:9'] });
   assert.deepEqual(r, { ok: false, files: [], failed: 0 });

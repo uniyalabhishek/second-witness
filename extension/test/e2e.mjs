@@ -15,7 +15,6 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
 const SHOTS = process.env.E2E_SHOTS ?? join(tmpdir(), 'second-witness-e2e');
 const DEMO = DEMO_ORIGIN;
-const CONTROL_KEY = process.env.CONTROL_KEY ?? 'local-demo';
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const steps = process.argv.slice(2).length ? process.argv.slice(2) : ['safe', 'cow', 'revoke', 'demo', 'loading', 'debugger', 'privacy', 'extensions'];
 const run = (...args) => {
@@ -176,15 +175,14 @@ async function checkSite(name, url, allowed) {
   await ev(`chrome.tabs.remove(${tabId})`);
 }
 
-/** The demo's control page takes plain form posts, so a helper tab runs them with this profile's cookies. */
-async function control_(path, key) {
-  const tabId = await openTab(`${DEMO}/control`);
+/** The demo's controls are plain form posts, so a helper tab runs them with this profile's cookies. */
+async function control_(path) {
+  const tabId = await openTab(`${DEMO}/?helper`);
   const { targetInfos } = await send('Target.getTargets');
-  const target = targetInfos.find(t => t.type === 'page' && t.url.startsWith(`${DEMO}/control`));
+  const target = targetInfos.find(t => t.type === 'page' && t.url.startsWith(`${DEMO}/?helper`));
   const { sessionId } = await send('Target.attachToTarget', { targetId: target.targetId, flatten: true });
-  const body = key ? `key=${key}` : '';
   await send('Runtime.evaluate', {
-    expression: `fetch(${JSON.stringify(path)}, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: ${JSON.stringify(body)} }).then(r => r.status)`,
+    expression: `fetch(${JSON.stringify(path)}, { method: 'POST' }).then(r => r.status)`,
     awaitPromise: true,
   }, sessionId);
   await sleep(300);
@@ -210,7 +208,7 @@ try {
   if (steps.includes('revoke')) await checkSite('revoke.cash', 'https://revoke.cash/', ['partial']);
 
   if (steps.includes('extensions')) {
-    const tabId = await openTab(`${DEMO}/`);
+    const tabId = await openTab(`${DEMO}/demo`);
     await message('start', tabId);
     const state = await result(tabId, 'matches');
     await shot('demo-with-wallet', tabId);
@@ -222,14 +220,14 @@ try {
   }
 
   if (steps.includes('demo')) {
-    await checkSite('demo clean', `${DEMO}/`, ['matches']);
+    await checkSite('demo clean', `${DEMO}/demo`, ['matches']);
 
     // Targeted: this client now gets altered code on the same immutable path, and it stays in this client's cache.
     let helper = await control_('/control/target');
     await closeTab(helper);
-    const tabId = await openTab(`${DEMO}/control?refresh=1`);
+    const tabId = await openTab(`${DEMO}/refresh`);
     await sleep(800);
-    await goTo(tabId, `${DEMO}/`);
+    await goTo(tabId, `${DEMO}/demo`);
     await sleep(500);
     await message('start', tabId);
     let state = await result(tabId, 'changed');
@@ -239,7 +237,7 @@ try {
     // The server is cleaned, but the altered copy still runs from this client's cache.
     helper = await control_('/control/clean');
     await closeTab(helper);
-    await goTo(tabId, `${DEMO}/`);
+    await goTo(tabId, `${DEMO}/demo`);
     state = await result(tabId, 'changed');
     report('demo after server clean, reload', state, state?.verdict?.result === 'changed');
     await message('finish', tabId);
@@ -247,9 +245,9 @@ try {
     // Refetch puts clean code back in this client's cache.
     helper = await control_('/control/refetch');
     await closeTab(helper);
-    const refreshed = await openTab(`${DEMO}/control?refresh=1`);
+    const refreshed = await openTab(`${DEMO}/refresh`);
     await sleep(800);
-    await goTo(refreshed, `${DEMO}/`);
+    await goTo(refreshed, `${DEMO}/demo`);
     await sleep(500);
     await message('start', refreshed);
     state = await result(refreshed, 'matches');
@@ -261,9 +259,9 @@ try {
     // A //# sourceURL label on the altered file must not turn it into an uncounted eval.
     helper = await control_('/control/target-labelled');
     await closeTab(helper);
-    const labelled = await openTab(`${DEMO}/control?refresh=1`);
+    const labelled = await openTab(`${DEMO}/refresh`);
     await sleep(800);
-    await goTo(labelled, `${DEMO}/`);
+    await goTo(labelled, `${DEMO}/demo`);
     await sleep(500);
     await message('start', labelled);
     state = await result(labelled, 'changed');
@@ -272,7 +270,7 @@ try {
     await closeTab(labelled);
     helper = await control_('/control/refetch');
     await closeTab(helper);
-    await closeTab(await openTab(`${DEMO}/control?refresh=1`));
+    await closeTab(await openTab(`${DEMO}/refresh`));
   }
 
   if (steps.includes('loading')) {
@@ -340,23 +338,6 @@ try {
     const naming = requests.filter(r => /safe\.global|cow\.fi|revoke\.cash/.test(JSON.stringify(r)));
     console.log(`  extension network: ${requests.length} requests to ${hosts.join(', ')}`);
     report(`no request names a site (${naming.length} did)`, state, requests.length > 0 && naming.length === 0 && hosts.every(h => /arkiv\.network$|publicnode\.com$/.test(h)));
-  }
-
-  if (steps.includes('release')) {
-    await closeTab(await control_('/control/release', CONTROL_KEY));
-    const tabId = await openTab(`${DEMO}/`);
-    await sleep(500);
-    await message('start', tabId);
-    let state = await result(tabId, 'notSeen');
-    report('demo renamed file, before witnesses', state, state?.verdict?.result === 'notSeen');
-    await shot('demo-notseen', tabId);
-    for (const key of ['W1_KEY', 'W2_KEY']) console.log(' ', run('witness/src/run.ts', '--key', key).split('\n').find(l => l.startsWith('demo')));
-    state = await result(tabId, 'newRelease', 400);
-    report(`demo renamed file, after witnesses: ${state?.verdict?.release?.addrs.map(a => a.value)}`, state, state?.verdict?.result === 'newRelease' && state.verdict.release.addrs.length > 0);
-    await shot('demo-newrelease', tabId);
-    await message('finish', tabId);
-    await closeTab(tabId);
-    await closeTab(await control_('/control/rollback', CONTROL_KEY));
   }
 
   if (steps.includes('ens')) {

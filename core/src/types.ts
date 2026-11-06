@@ -27,6 +27,8 @@ export interface Site {
   thirdParty: string[];
   /** Paths the crawl misses. */
   seeds: string[];
+  /** Page the crawl starts from, when the root doesn't load the app. */
+  home?: string;
 }
 
 /** The fields of CDP `Debugger.scriptParsed` we rely on, plus the hash once source is read. */

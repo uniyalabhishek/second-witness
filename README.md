@@ -4,7 +4,7 @@ A website can run different code in your browser than everyone else gets. The pa
 
 Second Witness is a button you press before you sign. It compares the code in your tab with what two witnesses recorded. If it's different, don't sign. The site doesn't have to sign up, and nobody learns what you check.
 
-[Demo video](VIDEO_URL) · [Live demo](https://second-witness.vercel.app/) · [Witness feed](https://second-witness.vercel.app/feed/)
+[Demo video](VIDEO_URL) · [Live demo](https://second-witness.vercel.app/demo) · [Witness feed](https://second-witness.vercel.app/feed/)
 
 ## How it works
 
@@ -69,7 +69,7 @@ npm test
 npm run build
 ```
 
-Load `extension/dist` as an unpacked extension at `chrome://extensions`, then open the [Demo Treasury](https://second-witness.vercel.app/) and press **Check before signing**. To see Don't sign, press **Serve this browser altered code** on [Demo control](https://second-witness.vercel.app/control) and check again.
+Load `extension/dist` as an unpacked extension at `chrome://extensions`, then open the [demo](https://second-witness.vercel.app/demo) and press **Check before signing**. To see Don't sign, press **Serve me altered code** on that page and check again.
 
 To run your own witnesses, put two funded Rabdi keys in `.env` as in `.env.example`, then run `npm run witness W1_KEY` and `npm run witness W2_KEY`. For your own roster, edit `ens/config.mjs`, run `ens/register.mjs`, and change `ENS_PARENT` in `reader/src/index.ts`. The site list is in `core/src/sites.ts`. `npm run site` builds what `vercel.json` hosts.
 

@@ -38,6 +38,7 @@ export const SITES: Site[] = [
     immutable: '^/assets/app-[0-9a-f]{16}\\.js$',
     thirdParty: [],
     seeds: [],
+    home: '/demo',
   },
   {
     id: 'revoke.cash',

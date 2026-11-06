@@ -6,7 +6,7 @@ Multisig and treasury signers, starting with Safe. They're few, they move a lot 
 
 ## Can they try it today?
 
-Yes. Load the [extension](https://second-witness.vercel.app/second-witness-extension.zip) and press the button on [app.safe.global](https://app.safe.global), [swap.cow.fi](https://swap.cow.fi), [revoke.cash](https://revoke.cash) or the [demo](https://second-witness.vercel.app/). Witnesses run in public [GitHub Actions](../.github/workflows/witness.yml).
+Yes. Load the [extension](https://second-witness.vercel.app/extension) and press the button on [app.safe.global](https://app.safe.global), [swap.cow.fi](https://swap.cow.fi), [revoke.cash](https://revoke.cash) or the [demo](https://second-witness.vercel.app/demo). Witnesses run in public [GitHub Actions](../.github/workflows/witness.yml).
 
 ## Will we keep building it after Mumbai?
 

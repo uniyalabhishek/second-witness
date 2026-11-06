@@ -10,7 +10,7 @@
   "scripts": {
     "test": "node --test \"core/test/*.test.ts\" \"reader/test/*.test.ts\" \"witness/test/*.test.ts\" \"feed/test/*.test.ts\" \"extension/test/*.test.ts\" \"replay/test/*.test.ts\" \"demo-site/test/*.test.ts\"",
     "typecheck": "tsc --noEmit",
-    "demo": "CONTROL_KEY=${CONTROL_KEY:-local-demo} PORT=8787 node demo-site/server.mjs",
+    "demo": "PORT=8787 node demo-site/server.mjs",
     "witness": "node --env-file=.env witness/src/run.ts --key",
     "build": "node extension/build.mjs && node feed/build.mjs",
     "site": "node deploy-site.mjs"
