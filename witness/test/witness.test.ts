@@ -35,6 +35,26 @@ test('refs: Next manifests and webpack chunk maps', () => {
   assert.ok(refs.includes('https://s.example/_next/static/chunks/456.fedcba9876543210.js'));
 });
 
+test('refs: a webpack chunk map with named chunks, as Aave ships it', () => {
+  const js = `c.u=e=>"static/chunks/"+(({4299:"9d008a28",5724:"datadogRecorder"})[e]||e)+"."+({11:"8e516a837047fdb7",4299:"56b92f6be25b7ed8",5724:"1d6ebbfdbf858c6d"})[e]+".js"`;
+  const refs = refsFromJs(js, 'https://s.example/_next/x.js', 'https://s.example');
+  assert.ok(refs.includes('https://s.example/_next/static/chunks/11.8e516a837047fdb7.js'));
+  assert.ok(refs.includes('https://s.example/_next/static/chunks/9d008a28.56b92f6be25b7ed8.js'));
+  assert.ok(refs.includes('https://s.example/_next/static/chunks/datadogRecorder.1d6ebbfdbf858c6d.js'));
+});
+
+test('refs: a bare path in a script can be relative to the file or to the root, as Vite ships it', () => {
+  const refs = refsFromJs(`__vite__mapDeps=["assets/Row-DwcB3nrZ.js"]`, 'https://s.example/assets/main.js', 'https://s.example');
+  assert.ok(refs.includes('https://s.example/assets/Row-DwcB3nrZ.js'));
+  assert.ok(refs.includes('https://s.example/assets/assets/Row-DwcB3nrZ.js'));
+});
+
+test('refs: Next chunks follow the base path of the file naming them', () => {
+  const js = `d.u=e=>"static/chunks/"+e+"."+{557:"7b79f63051ed8817"}[e]+".js"`;
+  const refs = refsFromJs(js, 'https://s.example/homepage/_next/static/chunks/webpack-1.js', 'https://s.example');
+  assert.ok(refs.includes('https://s.example/homepage/_next/static/chunks/557.7b79f63051ed8817.js'));
+});
+
 test('plan: nothing new writes nothing', () => {
   assert.deepEqual(planWrites(input({ known: new Map([[path, [A]]]) })), { obs: [], changes: [] });
 });
@@ -76,14 +96,14 @@ test('plan: a new version at a non-fixed path is not a change', () => {
   assert.deepEqual(changes, []);
 });
 
-test('plan: bodies split under the entity limit, with additions only on the first', () => {
+test('plan: bodies split under the entity limit, with additions on every part so a tab holding any file sees them', () => {
   const crawled = Array.from({ length: 4000 }, (_, i) => ({ path: `/c/${String(i).padStart(40, '0')}.js`, hash: A, body: `"${ADDR2}"` }));
   const { obs } = planWrites(input({ crawled }));
   assert.ok(obs.length > 1);
   for (const o of obs) assert.ok(new TextEncoder().encode(JSON.stringify(o)).length <= 128 * 1024);
   assert.equal(obs.reduce((n, o) => n + o.files.length, 0), 4000);
   assert.deepEqual(obs[0]!.added.addrs, [ADDR2]);
-  assert.deepEqual(obs[1]!.added.addrs, []);
+  assert.deepEqual(obs[1]!.added.addrs, [ADDR2]);
 });
 
 let server: Server;
@@ -147,7 +167,134 @@ test('crawl: a site can name the page to start from', async () => {
   assert.deepEqual(r.files.map(f => f.path), ['/a.js']);
 });
 
+test('crawl: follows scripts onto a second origin the site lists, and resolves their paths there', async () => {
+  const listen = async (handler: Parameters<typeof createServer>[1]) => {
+    const s = createServer(handler);
+    await new Promise<void>(r => s.listen(0, '127.0.0.1', r));
+    return { s, url: `http://127.0.0.1:${(s.address() as { port: number }).port}` };
+  };
+  const cdn = await listen((req, res) => {
+    if (req.url === '/entry.js') res.writeHead(200, js).end('import("/chunk.js")');
+    else if (req.url === '/chunk.js') res.writeHead(200, js).end('let c=1');
+    else res.writeHead(404).end();
+  });
+  const app = await listen((_req, res) => res.writeHead(200, { 'content-type': 'text/html' }).end(`<script src="${cdn.url}/entry.js"></script>`));
+  const r = await crawl({ ...fixture(), origins: [app.url, cdn.url], seeds: [] });
+  app.s.close();
+  cdn.s.close();
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.files.map(f => f.path).sort(), [`/${new URL(cdn.url).host}/chunk.js`, `/${new URL(cdn.url).host}/entry.js`]);
+});
+
+test('crawl: records a path the way the browser reads it, however the URL was escaped', async () => {
+  const app = createServer((req, res) => {
+    if (req.url === '/') res.writeHead(200, { 'content-type': 'text/html' }).end('<script src="/c/%5Bmode%5D-1.js"></script>');
+    else res.writeHead(200, js).end('let c=1');
+  });
+  await new Promise<void>(r => app.listen(0, '127.0.0.1', r));
+  const r = await crawl({ ...fixture(), origins: [`http://127.0.0.1:${(app.address() as { port: number }).port}`], seeds: [] });
+  app.close();
+  assert.deepEqual(r.files.map(f => f.path), ['/c/[mode]-1.js']);
+});
+
+test('crawl: waits out a rate limit instead of dropping the file', async () => {
+  let limited = false;
+  const app = createServer((req, res) => {
+    if (req.url === '/') return res.writeHead(200, { 'content-type': 'text/html' }).end('<script src="/a.js"></script>');
+    if (!limited) {
+      limited = true;
+      return res.writeHead(429, { 'retry-after': '1' }).end();
+    }
+    res.writeHead(200, js).end('let a=1');
+  });
+  await new Promise<void>(r => app.listen(0, '127.0.0.1', r));
+  const r = await crawl({ ...fixture(), origins: [`http://127.0.0.1:${(app.address() as { port: number }).port}`], seeds: [] });
+  app.close();
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.files.map(f => f.path), ['/a.js']);
+});
+
+test('crawl: follows a script list in the page itself, without counting it as reaching the site', async () => {
+  const page = `<script>var f=["assets\\u002fRow-DwcB3nrZ.js"]</script>`;
+  const app = createServer((req, res) => {
+    if (req.url === '/') return res.writeHead(200, { 'content-type': 'text/html' }).end(page);
+    res.writeHead(req.url === '/assets/Row-DwcB3nrZ.js' ? 200 : 404, js).end('let r=1');
+  });
+  await new Promise<void>(r => app.listen(0, '127.0.0.1', r));
+  const r = await crawl({ ...fixture(), origins: [`http://127.0.0.1:${(app.address() as { port: number }).port}`], seeds: [] });
+  app.close();
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.files.map(f => f.path), ['/assets/Row-DwcB3nrZ.js']);
+});
+
+const serve = async (handler: Parameters<typeof createServer>[1]) => {
+  const s = createServer(handler);
+  await new Promise<void>(r => s.listen(0, '127.0.0.1', r));
+  return { s, url: `http://127.0.0.1:${(s.address() as { port: number }).port}` };
+};
+const html = { 'content-type': 'text/html' };
+
+test('crawl: the same path on two origins is two files', async () => {
+  const cdn = await serve((_req, res) => res.writeHead(200, js).end('let cdn=1'));
+  const app = await serve((req, res) => {
+    if (req.url === '/') res.writeHead(200, html).end(`<script src="/x.js"></script><script src="${cdn.url}/x.js"></script>`);
+    else res.writeHead(200, js).end('let app=1');
+  });
+  const r = await crawl({ ...fixture(), origins: [app.url, cdn.url], seeds: [] });
+  app.s.close();
+  cdn.s.close();
+  assert.equal(r.files.length, 2);
+  assert.ok(r.files.some(f => f.path === '/x.js'));
+  assert.ok(r.files.some(f => f.path === `/${new URL(cdn.url).host}/x.js`));
+});
+
+test('crawl: running out of time is reached but not complete', async () => {
+  const names = Array.from({ length: 13 }, (_, i) => `<script src="/${i}.js"></script>`).join('');
+  const app = await serve((req, res) => {
+    if (req.url === '/') return res.writeHead(200, html).end(names);
+    setTimeout(() => res.writeHead(200, js).end('let s=1'), 200);
+  });
+  const r = await crawl({ ...fixture(), origins: [app.url], seeds: [] }, 100);
+  app.s.close();
+  assert.equal(r.ok, true);
+  assert.equal(r.complete, false);
+  assert.equal(r.files.length, 12);
+});
+
+test('crawl: a finished crawl is complete', async () => {
+  const r = await crawl(fixture());
+  assert.equal(r.complete, true);
+});
+
+test('crawl: a wait longer than the time left ends at once, and is not complete', async () => {
+  let scripts = 0;
+  const app = await serve((req, res) => {
+    if (req.url === '/') return res.writeHead(200, html).end('<script src="/a.js"></script><script src="/b.js"></script>');
+    if (req.url === '/a.js') return res.writeHead(200, js).end('let a=1');
+    scripts++;
+    res.writeHead(429, { 'retry-after': '60' }).end();
+  });
+  const started = Date.now();
+  const r = await crawl({ ...fixture(), origins: [app.url], seeds: [] }, 3000);
+  app.s.close();
+  assert.ok(Date.now() - started < 2000);
+  assert.equal(scripts, 1);
+  assert.equal(r.complete, false);
+});
+
+test('crawl: fetches a script once when the page names it twice', async () => {
+  let hits = 0;
+  const app = await serve((req, res) => {
+    if (req.url === '/') return res.writeHead(200, html).end('<script src="/a.js"></script><script>load("/a.js")</script>');
+    hits++;
+    res.writeHead(200, js).end('let a=1');
+  });
+  await crawl({ ...fixture(), origins: [app.url], seeds: [] });
+  app.s.close();
+  assert.equal(hits, 1);
+});
+
 test('crawl: an unreachable site is not ok and does not throw', async () => {
   const r = await crawl({ ...fixture(), origins: ['http://127.0.0.1:9'] });
-  assert.deepEqual(r, { ok: false, files: [], failed: 0 });
+  assert.deepEqual(r, { ok: false, complete: false, files: [], failed: 0 });
 });

@@ -13,7 +13,7 @@ import { SITES } from '../../core/src/sites.ts';
 import { surface } from '../../core/src/surface.ts';
 import { SCHEMA_CHANGE, SCHEMA_OBS, SCHEMA_STATUS, type Observation, type Site, type Surface } from '../../core/src/types.ts';
 import { ARKIV_RPC, fetchEntities } from '../../reader/src/index.ts';
-import { crawl } from './crawl.ts';
+import { crawl, type CrawlResult } from './crawl.ts';
 import { planWrites } from './plan.ts';
 
 const Obs = defineSchema(SCHEMA_OBS, { site: str().indexed(), observedAt: u64().indexed(), body: bytes() });
@@ -69,13 +69,26 @@ function knownFor(observations: Observation[], siteId: string): Map<string, stri
   return known;
 }
 
-/** Returns whether this site was reached and everything new was written. */
+// Crawls overlap so a long list fits the job's time limit. Writes take turns: one wallet, one nonce.
+const CRAWLS_AT_ONCE = 6;
+let writing: Promise<unknown> = Promise.resolve();
+function inTurn<T>(work: () => Promise<T>): Promise<T> {
+  const result = writing.then(work);
+  writing = result.catch(() => {});
+  return result;
+}
+
+/** Returns whether this witness is current on this site: crawled to the end, with everything new written. */
 async function witnessSite(site: Site, observations: Observation[]): Promise<boolean> {
   const crawled = await crawl(site);
   if (!crawled.ok) {
     console.log(`${site.id}: not reached`);
     return false;
   }
+  return inTurn(() => writeSite(site, crawled, observations));
+}
+
+async function writeSite(site: Site, crawled: CrawlResult, observations: Observation[]): Promise<boolean> {
   const cache = cacheFor(site);
   const plan = planWrites({
     crawled: crawled.files,
@@ -97,8 +110,8 @@ async function witnessSite(site: Site, observations: Observation[]): Promise<boo
   }
   // Only after the writes land: a failed run retries against the same cache and reports the same additions.
   for (const file of crawled.files) cache.save(file.hash, file.body);
-  console.log(`${site.id}: reached ${crawled.files.length} files, ${crawled.failed} failed, ${plan.obs.length + plan.changes.length} writes`);
-  return true;
+  console.log(`${site.id}: reached ${crawled.files.length} files, ${crawled.failed} failed, ${plan.obs.length + plan.changes.length} writes${crawled.complete ? '' : ', cut short'}`);
+  return crawled.complete;
 }
 
 const roster = new Set([me]);
@@ -109,13 +122,16 @@ const [ownObs, ownStatus] = await Promise.all([
 const observations = ownObs.flatMap(e => acceptObservation(e, roster) ?? []);
 
 const ok: string[] = [];
-for (const site of SITES) {
-  try {
-    if (await witnessSite(site, observations)) ok.push(site.id);
-  } catch (error) {
-    console.log(`${site.id}: write failed: ${(error as Error).message.split('\n')[0]}`);
+const queue = [...SITES];
+await Promise.all(Array.from({ length: CRAWLS_AT_ONCE }, async () => {
+  for (let site = queue.shift(); site; site = queue.shift()) {
+    try {
+      if (await witnessSite(site, observations)) ok.push(site.id);
+    } catch (error) {
+      console.log(`${site.id}: write failed: ${(error as Error).message.split('\n')[0]}`);
+    }
   }
-}
+}));
 
 const statusBody = encodeBody({ ok });
 const statusKey = ownStatus[0]?.key as `0x${string}` | undefined;

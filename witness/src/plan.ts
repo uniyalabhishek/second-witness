@@ -76,7 +76,8 @@ export function planWrites({ crawled, known, cachedSurface, cachedBody, immutabl
     const entry = byteLength(JSON.stringify([f.path, f.hash])) + 1;
     if (size + entry > MAX_BODY_BYTES && current.files.length > 0) {
       obs.push(current);
-      current = { files: [], added: { addrs: [], hosts: [] }, totals: { addrs: 0, hosts: 0 } };
+      // Every part repeats the additions: a release only speaks about a tab holding one of its files.
+      current = { files: [], added, totals };
       size = byteLength(JSON.stringify(current));
     }
     current.files.push([f.path, f.hash]);

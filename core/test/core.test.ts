@@ -118,6 +118,22 @@ test('addressesInUrl finds the Safe address in a Safe URL', () => {
 // classify ------------------------------------------------------------------
 const base: ParsedScript = { url: 'https://app.example/a.js', isolated: false, hasSourceURL: false, startLine: 0, startColumn: 0 };
 
+test('classify: a path reads the same however the page escaped it', () => {
+  assert.deepEqual(classify({ ...base, url: 'https://app.example/c/%5Bmode%5D-1.js' }, site), { kind: 'file', path: '/c/[mode]-1.js' });
+});
+
+test('classify: a file on a second origin keeps that origin in its path', () => {
+  const cdn = { ...site, origins: ['https://app.example', 'https://cdn.example'] };
+  assert.deepEqual(classify({ ...base, url: 'https://cdn.example/a.js' }, cdn), { kind: 'file', path: '/cdn.example/a.js' });
+  assert.deepEqual(classify({ ...base, url: 'https://app.example/a.js' }, cdn), { kind: 'file', path: '/a.js' });
+});
+
+test('classify: a CDN bot check under the site address is built per request, so it is not compared', () => {
+  for (const path of ['/cdn-cgi/challenge-platform/scripts/jsd/main.js', '/149e9513-01fa-4fb0-aad4-566afd725d1b/2d206a39-8ed7-437e-a3be-862e0f06eea3/a-4-a/c.js']) {
+    assert.deepEqual(classify({ ...base, url: `https://app.example${path}` }, site), { kind: 'uncompared', reason: 'eval' });
+  }
+});
+
 test('classify: a script in an isolated world belongs to another extension', () => {
   assert.deepEqual(classify({ ...base, isolated: true }, site), { kind: 'ignored' });
 });

@@ -84,7 +84,10 @@ function refresh(): Promise<void> {
     try {
       const roster = await fetchRoster(SEPOLIA_RPC);
       // Applied before the records are read, so a revocation counts even if that read fails.
-      if (catalogue) catalogue = { ...catalogue, roster };
+      if (catalogue) {
+        catalogue = { ...catalogue, roster };
+        await recheck();
+      }
       catalogue = await fetchCatalogue(ARKIV_RPC, roster, Date.now());
     } catch (error) {
       // The last good catalogue stands until it's an hour old, then the verdict reads Can't check.
@@ -93,10 +96,14 @@ function refresh(): Promise<void> {
       await chrome.storage.local.set({ catalogue }).catch(ignore);
       refreshing = null;
     }
-    for (const check of checks.values()) schedule(check);
-    await notifyPopup();
+    await recheck();
   })();
   return refreshing;
+}
+
+function recheck(): Promise<void> {
+  for (const check of checks.values()) schedule(check);
+  return notifyPopup();
 }
 
 function schedule(check: Check): void {
@@ -202,6 +209,7 @@ function onMainFrameNavigated(check: Check, frame: { id: string; url: string }):
   check.sessions.delete(ROOT);
   for (const id of check.gone) check.sessions.delete(id);
   check.gone.clear();
+  check.unread.clear();
   schedule(check);
 }
 
@@ -214,7 +222,6 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
   else if (method === 'Target.attachedToTarget') onTargetAttached(check, source, params);
   else if (method === 'Target.detachedFromTarget') {
     check.gone.add(params.sessionId);
-    check.unread.delete(params.sessionId);
     schedule(check);
   } else if (method === 'Page.loadEventFired' && isRoot) {
     check.loaded = true;
@@ -322,7 +329,7 @@ chrome.tabs.onRemoved.addListener(tabId => {
 });
 
 function keepFresh(): void {
-  void chrome.alarms.create(REFRESH_ALARM, { periodInMinutes: 15 });
+  void chrome.alarms.create(REFRESH_ALARM, { periodInMinutes: 30 });
   void boot.then(refresh);
 }
 chrome.runtime.onInstalled.addListener(keepFresh);

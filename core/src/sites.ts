@@ -3,6 +3,22 @@ import type { Site } from './types.ts';
 /** Where the Demo Treasury is served. The one value to change when it's deployed. */
 export const DEMO_ORIGIN = 'https://second-witness.vercel.app';
 
+// Filename shapes that carry a content hash. Only these can read Don't sign; any other file reads Not seen.
+const VITE = '/assets/.*-(?=[a-z-]*[A-Z0-9_])[A-Za-z0-9_-]{8}\\.js$';
+const NEXT = '/_next/static/chunks/.*[-.][0-9a-f]{16}\\.js$';
+const IMMUTABLE = '^/_next/static/immutable/.*\\.js$';
+const NONE = '$^';
+const GTM = 'www.googletagmanager.com';
+const CF_INSIGHTS = 'static.cloudflareinsights.com';
+
+const listed = (host: string, immutable: string, thirdParty: string[] = [], cdn: string[] = []): Site => ({
+  id: host,
+  origins: [host, ...cdn].map(h => `https://${h}`),
+  immutable,
+  thirdParty,
+  seeds: [],
+});
+
 /** The short list. Bundled with the witness and the extension. */
 export const SITES: Site[] = [
   {
@@ -56,6 +72,28 @@ export const SITES: Site[] = [
       '/_next/static/immutable/chunks/1y0r6veetnq08.js',
     ],
   },
+  // Each one compared in real Chrome against the crawl before listing: every file its home page loaded was found, with the same hash.
+  listed('app.aave.com', NEXT, ['app.family.co', CF_INSIGHTS]),
+  listed('app.uniswap.org', VITE, ['challenges.cloudflare.com', 'privy.app.uniswap.org'], ['cdn.app.uniswap.org']),
+  listed('stake.lido.fi', NEXT, ['matomo.lido.fi']),
+  listed('app.morpho.org', IMMUTABLE),
+  listed('www.curve.finance', VITE),
+  listed('app.compound.xyz', VITE, [CF_INSIGHTS]),
+  listed('app.ens.domains', VITE, [CF_INSIGHTS, 'widget.intercom.io', 'edge.ens.domains']),
+  listed('app.sky.money', VITE, [GTM, 'e.sky.money']),
+  listed('app.spark.finance', VITE),
+  listed('app.ethena.fi', NEXT),
+  listed('app.pendle.finance', VITE),
+  listed('pancakeswap.finance', IMMUTABLE, [GTM]),
+  listed('aerodrome.finance', VITE),
+  listed('fluid.io', VITE, [GTM]),
+  listed('across.to', VITE, [GTM]),
+  listed('stargate.finance', NEXT),
+  listed('superbridge.app', VITE),
+  listed('www.tally.xyz', NEXT, ['plausible.io']),
+  listed('snapshot.box', VITE),
+  listed('blur.io', NEXT, [GTM]),
+  listed('kamino.com', NONE, ['widget.intercom.io']),
 ];
 
 export function siteForUrl(url: string, sites: Site[] = SITES): Site | null {

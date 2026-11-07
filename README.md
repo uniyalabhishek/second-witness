@@ -39,7 +39,7 @@ The lead property is **Secure**: the page you're about to sign on can't vouch fo
 
 It doesn't catch:
 
-- Sites not on the list. There are 4 today: Safe, CoW Swap, revoke.cash and the demo.
+- Sites not on the list. There are 25 today, including Safe, Aave, Uniswap and Lido, in [`core/src/sites.ts`](core/src/sites.ts).
 - A release served to everyone under a new filename that adds no addresses or hosts. It reads New release for an hour, then Same code.
 - A bad transaction. It checks the code you sign through, not what you sign.
 - Code Chrome has already discarded when you press the button, so check right before you sign.

@@ -1,7 +1,8 @@
 // Drives the built extension in a real browser against the real sites and real records. Raw CDP, and only on
 // the extension's own page: attaching to a checked tab, or evaluating in it, would show up as code in that tab.
 // Needs: npm run build, the demo site at DEMO_ORIGIN, and witnesses already run.
-// node extension/test/e2e.mjs [safe cow revoke demo loading debugger privacy extensions release ens]
+// node extension/test/e2e.mjs [safe cow revoke demo loading debugger privacy extensions release ens listed]
+// `listed` checks the home page of every other listed site, and must be named.
 // `release` and `ens` spend testnet gas and must be named. After `release`, the demo site id reads New release for
 // 72 hours, so bump it in core/src/sites.ts, rebuild and rerun the witnesses.
 import { spawn, spawnSync } from 'node:child_process';
@@ -9,7 +10,7 @@ import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writ
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEMO_ORIGIN } from '../../core/src/sites.ts';
+import { DEMO_ORIGIN, SITES } from '../../core/src/sites.ts';
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -161,13 +162,14 @@ function report(name, state, ok) {
   if (!ok && v?.unknownHosts.length) console.log('  unknownHosts', v.unknownHosts);
 }
 
-async function checkSite(name, url, allowed) {
+async function checkSite(name, url, allowed, solid = false) {
   const tabId = await openTab(url);
   await sleep(5000);
   await shot(`${name}-before`, tabId);
   await message('start', tabId);
   const state = await result(tabId);
-  report(name, state, allowed.includes(state?.verdict?.result));
+  const v = state?.verdict;
+  report(name, state, allowed.includes(v?.result) && (!solid || (v.filesCompared > 0 && v.freshWitnesses >= 2)));
   await shot(name, tabId);
   await message('finish', tabId);
   const after = await message('getState', tabId);
@@ -205,6 +207,9 @@ try {
     await checkSite('app.safe.global accounts', 'https://app.safe.global/welcome/accounts', ['matches']);
   }
   if (steps.includes('cow')) await checkSite('swap.cow.fi', 'https://swap.cow.fi/', ['partial']);
+  if (steps.includes('listed')) {
+    for (const s of SITES.slice(4)) await checkSite(s.id, `${s.origins[0]}/`, ['matches', 'partial', 'newRelease'], true);
+  }
   if (steps.includes('revoke')) await checkSite('revoke.cash', 'https://revoke.cash/', ['partial']);
 
   if (steps.includes('extensions')) {
