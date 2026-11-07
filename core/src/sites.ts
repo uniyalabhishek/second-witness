@@ -82,7 +82,6 @@ export const SITES: Site[] = [
   listed('app.ens.domains', VITE, [CF_INSIGHTS, 'widget.intercom.io', 'edge.ens.domains']),
   listed('app.sky.money', VITE, [GTM, 'e.sky.money']),
   listed('app.spark.finance', VITE),
-  listed('app.ethena.fi', NEXT),
   listed('app.pendle.finance', VITE),
   listed('pancakeswap.finance', IMMUTABLE, [GTM]),
   listed('aerodrome.finance', VITE),
