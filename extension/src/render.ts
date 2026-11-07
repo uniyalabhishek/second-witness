@@ -167,7 +167,7 @@ function changedFile(c: ChangedFile): string {
 
 function matchesText(v: Verdict): string {
   const newest = v.newestFileAgeSeconds === null ? '' : ` Newest file ${esc(age(v.newestFileAgeSeconds))}.`;
-  return `This tab is running what everyone else got.${newest}`;
+  return `Every file matches what two witnesses recorded.${newest}`;
 }
 
 function newReleaseText(v: Verdict): string {

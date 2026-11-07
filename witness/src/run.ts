@@ -84,15 +84,16 @@ async function witnessSite(site: Site, observations: Observation[]): Promise<boo
     cachedBody: cache.read,
     immutable: new RegExp(site.immutable),
   });
-  for (const body of plan.obs) {
-    const values = { site: site.id, observedAt: u64(BigInt(Math.floor(Date.now() / 1000))), body: encodeBody(body) };
-    const { txHash } = await wallet.createEntity(Obs, values, WRITE_ONCE);
-    console.log(`${site.id}: observed ${body.files.length} files, +${body.totals.addrs} addresses, +${body.totals.hosts} hosts ${txHash}`);
-  }
+  // Changes first: once a hash is observed, a retry no longer sees it as a change.
   for (const change of plan.changes) {
     const values = { site: site.id, old: change.old, new: change.new, body: encodeBody(change.body) };
     const { txHash } = await wallet.createEntity(Change, values, WRITE_ONCE);
     console.log(`${site.id}: ${change.body.path} changed ${txHash}`);
+  }
+  for (const body of plan.obs) {
+    const values = { site: site.id, observedAt: u64(BigInt(Math.floor(Date.now() / 1000))), body: encodeBody(body) };
+    const { txHash } = await wallet.createEntity(Obs, values, WRITE_ONCE);
+    console.log(`${site.id}: observed ${body.files.length} files, +${body.totals.addrs} addresses, +${body.totals.hosts} hosts ${txHash}`);
   }
   // Only after the writes land: a failed run retries against the same cache and reports the same additions.
   for (const file of crawled.files) cache.save(file.hash, file.body);
@@ -105,7 +106,7 @@ const [ownObs, ownStatus] = await Promise.all([
   fetchEntities(ARKIV_RPC, SCHEMA_OBS, [me]),
   fetchEntities(ARKIV_RPC, SCHEMA_STATUS, [me]),
 ]);
-const observations = ownObs.entities.flatMap(e => acceptObservation(e, roster) ?? []);
+const observations = ownObs.flatMap(e => acceptObservation(e, roster) ?? []);
 
 const ok: string[] = [];
 for (const site of SITES) {
@@ -117,7 +118,7 @@ for (const site of SITES) {
 }
 
 const statusBody = encodeBody({ ok });
-const statusKey = ownStatus.entities[0]?.key as `0x${string}` | undefined;
+const statusKey = ownStatus[0]?.key as `0x${string}` | undefined;
 if (statusKey) {
   await wallet.patchEntity(Status, statusKey, { set: { body: statusBody } });
 } else {

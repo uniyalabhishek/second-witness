@@ -78,7 +78,7 @@ test('checking shows real counts', () => {
 
 test('real values appear', () => {
   const m = render(attached(verdict({ witnessCount: 3, newestFileAgeSeconds: 7200, filesCompared: 41 })), NOW);
-  assert.match(m, /This tab is running what everyone else got\. Newest file 2 hours old\./);
+  assert.match(m, /Every file matches what two witnesses recorded\. Newest file 2 hours old\./);
   assert.match(m, /41 files from 56 scripts/);
   assert.match(m, /Updated 12 seconds ago\./);
   assert.doesNotMatch(m, /compares code only|says nothing about/);

@@ -67,22 +67,20 @@ function arkivClient(arkivRpc: string) {
 }
 
 /** Every entity of a schema by these creators. Pages by key, because offsets shift when rows are written mid-read. */
-export async function fetchEntities(arkivRpc: string, schema: string, creators: string[]): Promise<{ entities: RawEntity[]; headBlock: number }> {
-  if (creators.length === 0) return { entities: [], headBlock: 0 };
+export async function fetchEntities(arkivRpc: string, schema: string, creators: string[]): Promise<RawEntity[]> {
+  if (creators.length === 0) return [];
   const client = arkivClient(arkivRpc);
   const base = `arkiv.schema = str('${schema}') AND (${creators.map(c => `$creator = addr(${c})`).join(' OR ')})`;
   const entities: RawEntity[] = [];
-  let headBlock = 0;
   let after: string | null = null;
   for (let page = 0; page < MAX_PAGES; page++) {
     const query = after ? `${base} AND $key > key(${after})` : base;
     const result = await client.query(query, { select: SELECT, orderBy: asc('$key'), limit: PAGE });
-    headBlock = Math.max(headBlock, Number(result.blockNumber));
     for (const row of result.entities as Row[]) {
       const entity = rowToEntity(row);
       if (entity) entities.push(entity);
     }
-    if (result.entities.length < PAGE) return { entities, headBlock };
+    if (result.entities.length < PAGE) return entities;
     after = (result.entities.at(-1) as Row).$key as string;
   }
   throw new Error(`more than ${MAX_PAGES} pages of ${schema}`);
@@ -97,11 +95,12 @@ export async function fetchCatalogue(arkivRpc: string, roster: RosterEntry[], no
   const head = await arkivClient(arkivRpc).getBlock();
   return {
     fetchedAt: now,
-    headBlock: Math.max(obs!.headBlock, changes!.headBlock, statuses!.headBlock),
+    // Both from one block. A lagging query answers with an older block, which would make old records look new.
+    headBlock: Number(head.number),
     headTime: Number(head.timestamp),
     roster,
-    observations: obs!.entities.flatMap(e => acceptObservation(e, allowed) ?? []),
-    changes: changes!.entities.flatMap(e => acceptChange(e, allowed) ?? []),
-    statuses: statuses!.entities.flatMap(e => acceptStatus(e, allowed) ?? []),
+    observations: obs!.flatMap(e => acceptObservation(e, allowed) ?? []),
+    changes: changes!.flatMap(e => acceptChange(e, allowed) ?? []),
+    statuses: statuses!.flatMap(e => acceptStatus(e, allowed) ?? []),
   };
 }

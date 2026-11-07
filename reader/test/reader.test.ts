@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
+import { createServer, type Server } from 'node:http';
 import { test } from 'node:test';
 import { bytesToHex } from 'viem';
 import { acceptObservation, encodeBody } from '../../core/src/entities.ts';
-import { rowToEntity } from '../src/index.ts';
+import { fetchCatalogue, rowToEntity } from '../src/index.ts';
 
 const WITNESS = '0x109f654ec9c3c235d2f49128f8fa373bb3685821';
 const HASH = 'a'.repeat(64);
@@ -58,5 +59,28 @@ test('malformed rows return null or fail acceptance without throwing', () => {
     const attrs = { site: { value: 'demo' }, body: { value } };
     const entity = rowToEntity(row({ $attributes: attrs }));
     if (entity) assert.equal(acceptObservation(entity, roster), null, String(value));
+  }
+});
+
+test('block and time come from the same block, so a lagging query can not make an old heartbeat look new', async () => {
+  // Queries answer from block 100 while the chain is at block 200, at time 1000.
+  const server: Server = createServer((req, res) => {
+    let body = '';
+    req.on('data', chunk => (body += chunk));
+    req.on('end', () => {
+      const { id, method } = JSON.parse(body);
+      const result = method === 'arkiv_query' ? { data: [], blockNumber: '0x64' } : { number: '0xc8', timestamp: '0x3e8', hash: `0x${'1'.repeat(64)}`, transactions: [] };
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ jsonrpc: '2.0', id, result }));
+    });
+  });
+  await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+  try {
+    const { port } = server.address() as { port: number };
+    const c = await fetchCatalogue(`http://127.0.0.1:${port}`, [{ label: 'w1', address: WITNESS }], 0);
+    assert.equal(c.headBlock, 200);
+    assert.equal(c.headTime, 1000);
+  } finally {
+    server.close();
   }
 });

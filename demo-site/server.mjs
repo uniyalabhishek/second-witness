@@ -100,6 +100,9 @@ const DEBUGGER_PAGE = `<!doctype html><title>0</title><script>let ticks = 0; deb
 // Stays loading for a while, so the browser test can check that no result shows until it's done.
 const SLOW_PAGE = `<!doctype html><title>Slow</title><script src="${APP_PATH}"></script><script src="/slow.js"></script>`;
 
+// Starts a worker that is gone seconds later, so the browser test can check its code still counts.
+const WORKER_PAGE = `<!doctype html><title>Worker</title><script>setTimeout(() => new Worker('/brief.js'), 2000)</script>`;
+
 const SITE_CSS = `.home { max-width: 560px; margin: 0 auto; padding: var(--space-5) var(--space-3); display: grid; gap: var(--space-3); }
 .home h1 { font-size: var(--text-xl); line-height: var(--leading-tight); }
 .home p { font-size: var(--text-l); }
@@ -143,6 +146,8 @@ export function createDemoServer() {
       if (pathname === '/base.css') return cssFile(css('base.css'));
       if (pathname === '/site.css') return cssFile(SITE_CSS);
       if (pathname === '/debugger') return html(DEBUGGER_PAGE);
+      if (pathname === '/worker') return html(WORKER_PAGE);
+      if (pathname === '/brief.js') return send(200, 'text/javascript; charset=utf-8', 'setTimeout(close, 2000);\n', { 'cache-control': 'no-store' });
       if (pathname === '/slow') return html(SLOW_PAGE);
       if (pathname === '/slow.js') return setTimeout(() => send(200, 'text/javascript; charset=utf-8', '// Slow\n', { 'cache-control': 'no-store' }), SLOW_MS);
     }

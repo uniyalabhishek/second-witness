@@ -18,8 +18,10 @@ interface Check {
   tabUrl: string;
   mainFrameId?: string;
   startedAt: number;
-  /** Session -> scriptId -> script. A session's scripts go when it does. */
+  /** Session -> scriptId -> script. */
   sessions: Map<string, Map<string, ParsedScript>>;
+  /** Sessions that ended. What they ran still counts until the next navigation, or a brief worker could clear a result. */
+  gone: Set<string>;
   /** Frames, worklets and failed workers: code running in this tab that was not read. */
   unread: Set<string>;
   /** Enables and source reads in flight. No result is shown while this is above zero. */
@@ -81,12 +83,14 @@ function refresh(): Promise<void> {
   refreshing ??= (async () => {
     try {
       const roster = await fetchRoster(SEPOLIA_RPC);
+      // Applied before the records are read, so a revocation counts even if that read fails.
+      if (catalogue) catalogue = { ...catalogue, roster };
       catalogue = await fetchCatalogue(ARKIV_RPC, roster, Date.now());
-      await chrome.storage.local.set({ catalogue });
     } catch (error) {
       // The last good catalogue stands until it's an hour old, then the verdict reads Can't check.
       console.warn('Second Witness: refresh failed', (error as Error).message);
     } finally {
+      await chrome.storage.local.set({ catalogue }).catch(ignore);
       refreshing = null;
     }
     for (const check of checks.values()) schedule(check);
@@ -196,6 +200,8 @@ function onMainFrameNavigated(check: Check, frame: { id: string; url: string }):
   check.reads = { done: 0, total: 0 };
   // Service workers outlive the page, so only the page's own session is cleared.
   check.sessions.delete(ROOT);
+  for (const id of check.gone) check.sessions.delete(id);
+  check.gone.clear();
   schedule(check);
 }
 
@@ -207,7 +213,7 @@ chrome.debugger.onEvent.addListener((source, method, params: any) => {
   else if (method === 'Debugger.paused') send(source, 'Debugger.resume').catch(ignore);
   else if (method === 'Target.attachedToTarget') onTargetAttached(check, source, params);
   else if (method === 'Target.detachedFromTarget') {
-    check.sessions.delete(params.sessionId);
+    check.gone.add(params.sessionId);
     check.unread.delete(params.sessionId);
     schedule(check);
   } else if (method === 'Page.loadEventFired' && isRoot) {
@@ -232,6 +238,7 @@ async function start(tab: chrome.tabs.Tab): Promise<void> {
     tabUrl: tab.url!,
     startedAt,
     sessions: new Map(),
+    gone: new Set(),
     unread: new Set(),
     pending: 0,
     reads: { done: 0, total: 0 },

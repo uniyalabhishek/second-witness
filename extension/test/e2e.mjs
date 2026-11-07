@@ -16,7 +16,7 @@ const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
 const SHOTS = process.env.E2E_SHOTS ?? join(tmpdir(), 'second-witness-e2e');
 const DEMO = DEMO_ORIGIN;
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-const steps = process.argv.slice(2).length ? process.argv.slice(2) : ['safe', 'cow', 'revoke', 'demo', 'loading', 'debugger', 'privacy', 'extensions'];
+const steps = process.argv.slice(2).length ? process.argv.slice(2) : ['safe', 'cow', 'revoke', 'demo', 'worker', 'loading', 'debugger', 'privacy', 'extensions'];
 const run = (...args) => {
   const r = spawnSync('node', ['--env-file=.env', ...args], { cwd: ROOT, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`${args.join(' ')} failed: ${r.stderr.slice(-400)}`);
@@ -321,6 +321,21 @@ try {
     await closeTab(tabId);
   }
 
+  if (steps.includes('worker')) {
+    const tabId = await openTab(`${DEMO}/worker`);
+    await message('start', tabId);
+    let state = await result(tabId, 'notSeen');
+    report('worker with code nobody recorded reads Not seen', state, state?.verdict?.result === 'notSeen');
+    await sleep(6000);
+    state = await message('getState', tabId);
+    report('still Not seen after that worker is gone', state, state?.verdict?.result === 'notSeen');
+    await goTo(tabId, `${DEMO}/demo`);
+    state = await result(tabId, 'matches');
+    report('navigating to clean code clears it', state, state?.verdict?.result === 'matches');
+    await message('finish', tabId);
+    await closeTab(tabId);
+  }
+
   if (steps.includes('privacy')) {
     const { targetInfos } = await send('Target.getTargets');
     const worker = targetInfos.find(t => t.type === 'service_worker' && t.url.startsWith(`chrome-extension://${extId}/`));
@@ -347,13 +362,23 @@ try {
     await message('start', tabId);
     let state = await result(tabId, 'matches');
     report('Safe before clearing w2', state, state?.verdict?.result === 'matches');
+    // Records can't be read during the flip: a revocation has to count anyway.
+    const { targetInfos } = await send('Target.getTargets');
+    const worker = targetInfos.find(t => t.type === 'service_worker' && t.url.startsWith(`chrome-extension://${extId}/`));
+    const { sessionId } = await send('Target.attachToTarget', { targetId: worker.targetId, flatten: true });
+    const fetchedAt = () => ev(`chrome.storage.local.get('catalogue').then(({ catalogue: c }) => c.fetchedAt)`);
+    await send('Network.enable', {}, sessionId);
+    await send('Network.setBlockedURLs', { urls: ['*arkiv.network*'] }, sessionId);
+    await sleep(70_000); // Long enough for any read already under way to finish.
+    const blockedAt = await fetchedAt();
     try {
       console.log(' ', run('ens/clear-witness.mjs', 'w2').trim());
       state = await result(tabId, 'notSeen', 480);
-      report('Safe after clearing w2', state, state?.verdict?.result === 'notSeen');
+      report('Safe after clearing w2, with records unreadable', state, state?.verdict?.result === 'notSeen' && await fetchedAt() === blockedAt);
       await shot('safe-w2-cleared', tabId);
     } finally {
       console.log(' ', run('ens/set-witness.mjs', 'w2', w2).trim());
+      await send('Network.setBlockedURLs', { urls: [] }, sessionId);
     }
     state = await result(tabId, 'matches', 480);
     report('Safe after restoring w2', state, state?.verdict?.result === 'matches');
